@@ -176,7 +176,7 @@ public class CodeGen {
 			func.codeLines.add("fetched.generateLinks();");
 			func.codeLines.add("return fetched;");
 		} else {
-			func.annotations.add("@GetMapping(path = \"/" + path + "/" + entity.toLowerCase() + "\")");
+			func.annotations.add("@GetMapping(path = \"/" + path + "/" + getPlural(entity.toLowerCase()) + "\")");
 			func.exceptions.add("Exception");
 			func.codeLines.add(
 					"Optional<" + name + "> " + name.toLowerCase() + "=" + name.toLowerCase() + "Repo.findById(id);");
@@ -184,7 +184,7 @@ public class CodeGen {
 			func.codeLines.add(
 					entity + " " + entity.toLowerCase() + "_tmp=" + name.toLowerCase() + ".get().get" + entity + "();");
 			func.codeLines.add("if(" + entity.toLowerCase() + "_tmp==null)");
-			func.codeLines.add("throw new Exception(\"" + entity + " not found\");");
+			func.codeLines.add(entity.toLowerCase() + "_tmp=new "+entity+"();");
 			func.codeLines.add(entity.toLowerCase() + "_tmp.generateLinks();\r\n");
 			func.codeLines.add("return " + entity.toLowerCase() + "_tmp;\r\n}");
 			func.codeLines.add("throw new Exception(\"" + name + " not found\");");
@@ -236,6 +236,70 @@ public class CodeGen {
 		return clazz;
 	}
 	
+	public ClassMetaData addPatchMapping(ClassMetaData clazz, String entity) {
+		String name = clazz.getName().replace("Resource", "");
+		String entityObject = entity.toLowerCase();
+		String objectName = name.toLowerCase();
+		String path = getPlural(objectName);
+		path += "/{id}/" + getPlural(entityObject);
+		//System.out.println("'Path=\"/" + path + "\"" + params + "'");
+		ClassMetaData entityClass=classes.get(entity);
+		List<Property> entityProperties=entityClass.getProperties();
+		Property uniqueProperty=null;
+		for (Property property : entityProperties) {
+			Set<String> annots=property.annotations;
+			for (String annot : annots) {
+				if(annot.contains("@Column(unique = true")) {
+					uniqueProperty=property;
+					break;
+				}
+			}
+			if(uniqueProperty!=null)
+				break;
+		}
+		if(uniqueProperty!=null) {
+			
+			Property property=clazz.addProperty("private", "EntityManager", "entityManager", false);
+			property.annotations.add("@PersistenceContext");
+			clazz.addImport("import javax.persistence.EntityManager;"); 
+			clazz.addImport("import javax.persistence.PersistenceContext;");
+			clazz.addImport("import org.springframework.web.bind.annotation.PatchMapping;");
+			clazz.addImport("import javax.persistence.TypedQuery;");
+			Function addRel = clazz.addFunction("public", entity, "addRelTo" + entity);
+			addRel.exceptions.add("Exception");
+			addRel.annotations.add("@PatchMapping(path = \"/" + path + "\")");
+			addRel.addParam("@RequestBody", entity, entityObject);
+			addRel.addParam("@PathVariable", "long", "id");
+			addRel.codeLines.add(
+					"Optional<" + name + "> " + name.toLowerCase() + "=" + name.toLowerCase() + "Repo.findById(id);");
+			addRel.codeLines.add(name + " " + name.toLowerCase() + "_tmp=null;");
+			addRel.codeLines.add("if(" + name.toLowerCase() + ".isPresent()) " + name.toLowerCase() + "_tmp="
+					+ name.toLowerCase() + ".get();\r\nelse\r\n");
+			addRel.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
+			
+			String getValFuncName=uniqueProperty.name.substring(0, 1).toUpperCase()+uniqueProperty.name.substring(1).toLowerCase();
+			addRel.codeLines.add("TypedQuery<"+entity+"> "+entityObject+"_q2 = entityManager.createQuery(\"SELECT obj FROM "+entity+" obj where obj."+uniqueProperty.name+"='\"+"+entityObject+".get"+getValFuncName+"()+\"'\", "+entity+".class);");
+			addRel.codeLines.add("List<"+entity+"> "+entityObject+"_rel= "+entityObject+"_q2.getResultList();");
+			addRel.codeLines.add("if("+entityObject+"_rel!=null && "+entityObject+"_rel.size()>0) {");
+			addRel.codeLines.add(entityObject+"_rel.get(0);");
+			Property prop=classes.get(name).getProperty(getPlural(entityObject));
+			if(prop==null)
+				addRel.codeLines.add(name.toLowerCase()+"_tmp.set"+entity+"("+entityObject+"_rel.get(0));");
+			else
+				addRel.codeLines.add(name.toLowerCase()+"_tmp.get"+getPlural(entity)+"().add("+entityObject+"_rel.get(0));");
+			prop=classes.get(entity).getProperty(getPlural(name.toLowerCase()));
+			if(prop==null)
+				addRel.codeLines.add(entityObject+"_rel.get(0).set"+name+"("+name.toLowerCase()+"_tmp);");//addRel.codeLines.add(name.toLowerCase()+"_tmp.set"+entity+"("+entityObject+"_rel.get(0));");
+			else
+				addRel.codeLines.add(entityObject+"_rel.get(0).get"+getPlural(name)+"().add("+name.toLowerCase()+"_tmp);");//name.toLowerCase()+"_tmp.get"+getPlural(entity)+"().add("+entityObject+"_rel.get(0));");
+			addRel.codeLines.add(name.toLowerCase()+"Repo.save("+name.toLowerCase()+"_tmp);");
+			addRel.codeLines.add("return "+entityObject+"_rel.get(0);");
+			addRel.codeLines.add("}");
+			addRel.codeLines.add("throw new Exception(\"" + entity + " not found\");\r\n");
+		}
+		return clazz;
+	}
+	
 	public ClassMetaData addPutMapping(ClassMetaData clazz) {
 		String name = clazz.getName().replace("Resource", "");
 		String objectName = name.toLowerCase();
@@ -276,14 +340,10 @@ public class CodeGen {
 		return clazz;
 	}
 	
-	public ClassMetaData addPutRelMapping(ClassMetaData clazz, String entity) {
-		
-			
+	public ClassMetaData addPutRelMapping(ClassMetaData clazz, String entity) {		
 		String name = clazz.getName().replace("Resource", "");
 		ClassMetaData cmd=classes.get(entity);
 		
-		if(cmd.getProperty(getPlural(name.toLowerCase()))==null)
-			return null;
 		String objectName = name.toLowerCase();
 		String path = getPlural(objectName) + "/{"+objectName+"Id}/"+getPlural(entity.toLowerCase())+"/{"+entity.toLowerCase()+"Id}";
 
@@ -316,8 +376,63 @@ public class CodeGen {
 		func.codeLines.add("throw new Exception(\"" + entity + " not found\");\r\n");
 
 		
+		
 		func.codeLines.add(name.toLowerCase() + "_tmp.get"+getPlural(entity)+"().add("+entity.toLowerCase() + "_tmp);");
-		func.codeLines.add(entity.toLowerCase() + "_tmp.get"+getPlural(name)+"().add("+name.toLowerCase() + "_tmp);");				
+		if(cmd.getProperty(getPlural(name.toLowerCase()))==null)
+			func.codeLines.add(entity.toLowerCase() + "_tmp.set"+name+"("+name.toLowerCase() + "_tmp);");
+		else
+			func.codeLines.add(entity.toLowerCase() + "_tmp.get"+getPlural(name)+"().add("+name.toLowerCase() + "_tmp);");				
+		
+		func.codeLines.add(objectName + "Repo.save(" +name.toLowerCase() + "_tmp);");
+		func.codeLines.add(entity.toLowerCase() + "Repo.save(" +entity.toLowerCase() + "_tmp);");
+		
+		func.codeLines.add(entity.toLowerCase() + "_tmp.generateLinks();");
+		func.codeLines.add("return "+entity.toLowerCase() + "_tmp;");
+		return addDeleteRelMapping(clazz,entity);
+		//return clazz;
+	}
+	
+	public ClassMetaData addDeleteRelMapping(ClassMetaData clazz, String entity) {		
+		String name = clazz.getName().replace("Resource", "");
+		ClassMetaData cmd=classes.get(entity);
+		
+		String objectName = name.toLowerCase();
+		String path = getPlural(objectName) + "/{"+objectName+"Id}/"+getPlural(entity.toLowerCase())+"/{"+entity.toLowerCase()+"Id}";
+
+		Property prop = clazz.addProperty("private ", entity + "Repository", entity.toLowerCase() + "Repo", false);
+		prop.annotations.add("@Autowired");
+		if (clazz.getFunction("remove" + entity) != null)
+			return null;
+
+		Function func = clazz.addFunction("public", entity, "remove" + entity);
+		func.exceptions.add("Exception");
+
+		clazz.addImport("import org.springframework.web.bind.annotation.DeleteMapping;");
+		System.out.println("'Path=\"" + path + "\"'");
+		func.annotations.add("@DeleteMapping(path = \"/" + path + "\")");
+		func.addParam("@PathVariable", "long", objectName+"Id");
+		func.addParam("@PathVariable", "long", entity.toLowerCase()+"Id");
+		func.codeLines
+				.add("Optional<" + name + "> " + name.toLowerCase() + "_persisted=" + name.toLowerCase() + "Repo.findById("+objectName+"Id);");
+		func.codeLines.add(name + " " + name.toLowerCase() + "_tmp=null;");
+		func.codeLines.add("if(" + name.toLowerCase() + "_persisted.isPresent()) " + name.toLowerCase() + "_tmp="
+				+ name.toLowerCase() + "_persisted.get();\r\nelse\r\n");
+		func.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
+		
+		
+		func.codeLines
+				.add("Optional<" + entity + "> " + entity.toLowerCase() + "_persisted=" + entity.toLowerCase() + "Repo.findById("+entity.toLowerCase()+"Id);");
+		func.codeLines.add(entity + " " + entity.toLowerCase() + "_tmp=null;");
+		func.codeLines.add("if(" + entity.toLowerCase() + "_persisted.isPresent()) " + entity.toLowerCase() + "_tmp="
+					+ entity.toLowerCase() + "_persisted.get();\r\nelse\r\n");
+		func.codeLines.add("throw new Exception(\"" + entity + " not found\");\r\n");
+
+		
+		func.codeLines.add(name.toLowerCase() + "_tmp.get"+getPlural(entity)+"().remove("+entity.toLowerCase() + "_tmp);");
+		if(cmd.getProperty(getPlural(name.toLowerCase()))==null)
+			func.codeLines.add(entity.toLowerCase() + "_tmp.set"+name+"(null);");
+		else
+			func.codeLines.add(entity.toLowerCase() + "_tmp.get"+getPlural(name)+"().remove("+name.toLowerCase() + "_tmp);");				
 		
 		func.codeLines.add(objectName + "Repo.save(" +name.toLowerCase() + "_tmp);");
 		func.codeLines.add(entity.toLowerCase() + "Repo.save(" +entity.toLowerCase() + "_tmp);");
@@ -327,6 +442,7 @@ public class CodeGen {
 
 		return clazz;
 	}
+	
 
 	public ClassMetaData addPostMapping(ClassMetaData clazz, String entity) {
 		String name = clazz.getName().replace("Resource", "");
@@ -395,7 +511,8 @@ public class CodeGen {
 			// System.out.println("Class name:"+clazz.getName());
 			// System.out.println(func.toString());
 		} else {
-			path += "/{id}/" + entityObject;
+			path += "/{id}/" + getPlural(entityObject);
+			clazz=addPatchMapping(clazz, entity);
 			System.out.println("'Path=\"/" + path + "\"" + params + "'");
 			func.annotations.add("@PostMapping(path = \"/" + path + "\"" + params + ")");
 			func.addParam("@RequestBody", entity, entityObject);
@@ -420,6 +537,7 @@ public class CodeGen {
 					if (!param.equals(name)) {
 						prop = clazz.addProperty("private ", param + "Repository ", param.toLowerCase() + "Repo",
 								false);
+						clazz=addPatchMapping(clazz, param);
 						prop.annotations.add("@Autowired");
 						func.addParam("@RequestParam", "long", param.toLowerCase() + "Id");
 						func.codeLines.add("Optional<" + param + "> " + param.toLowerCase() + "=" + param.toLowerCase()
@@ -449,127 +567,7 @@ public class CodeGen {
 	}
 	
 	
-	public ClassMetaData addPostMappingOld(ClassMetaData clazz, String entity) {
-		String name = clazz.getName().replace("Resource", "");
-		String entityObject = entity.toLowerCase();
-		String objectName = name.toLowerCase();
-		String path = getPlural(objectName);
-		String params = "";
-		String paramArray[] = classes.get(entity).getRequiredNonPrimitiveProps();
-		String clazzReqprops[] = classes.get(name).getRequiredNonPrimitiveProps();
-		for (String prop : clazzReqprops) {
-			// System.out.println(prop+"=="+entity);
-			if (prop.contains(entity)) {
-				System.out.println("Path not created: '" + path + "/{id}/" + entityObject + "'");
-				return null;
-			}
-		}
-		for (String param : paramArray) {
-			if (!param.equals(name))
-				params += "\"" + param.toLowerCase() + "Id\",";
-		}
-		if (params.endsWith(",")) {
-			params += ",";
-			params = params.replace(",,", "");
-		}
-		if (params.trim().length() > 0) {
-			params = ",params= {" + params + "}";
-		}
-
-		Property prop = clazz.addProperty("private ", entity + "Repository", entity.toLowerCase() + "Repo", false);
-		prop.annotations.add("@Autowired");
-		if (clazz.getFunction("create" + entity) != null)
-			return null;
-
-		Function func = clazz.addFunction("public", "ResponseEntity<Object>", "create" + entity);
-		func.exceptions.add("Exception");
-
-		if (name.equals(entity)) {
-			System.out.println("'Path=\"" + path + "\"" + params + "'");
-			func.annotations.add("@PostMapping(path = \"/" + path + "\"" + params + ")");
-			func.addParam("@RequestBody", entity, entityObject);
-			if (params.trim().length() == 0) {
-				func.codeLines.add(entityObject + "=" + entityObject + "Repo.save(" + entityObject + ");");
-				func.codeLines.add(
-						"URI location = ServletUriComponentsBuilder.fromCurrentRequest().path(\"/{id}\").buildAndExpand("
-								+ entityObject + ".getId()).toUri();");
-				func.codeLines.add("return ResponseEntity.created(location).build();");
-			} else {
-				if (paramArray != null) {
-					for (String param : paramArray)
-						if (!param.equals(name)) {
-							prop = clazz.addProperty("private ", param + "Repository ", param.toLowerCase() + "Repo",
-									false);
-							prop.annotations.add("@Autowired");
-							func.addParam("@RequestParam", "long", param.toLowerCase() + "Id");
-							func.codeLines.add("Optional<" + param + "> " + param.toLowerCase() + "="
-									+ param.toLowerCase() + "Repo.findById(" + param.toLowerCase() + "Id" + ");");
-							func.codeLines.add(param + " " + param.toLowerCase() + "_tmp=null;");
-							func.codeLines.add("if(" + param.toLowerCase() + ".isPresent()) " + param.toLowerCase()
-									+ "_tmp=" + param.toLowerCase() + ".get();\r\nelse\r\n");
-							func.codeLines.add("throw new Exception(\"" + param + " not found\");\r\n");
-							func.codeLines.add(entityObject + ".set" + param + "(" + param.toLowerCase() + "_tmp);");
-						}
-					func.codeLines.add(entityObject + "=" + entityObject + "Repo.save(" + entityObject + ");");
-					func.codeLines.add("URI uri = URI.create(\"" + entityObject + "/\"+" + entityObject + ".getId());");
-					func.codeLines.add("return ResponseEntity.created(uri).build();");
-				}
-			}
-			// System.out.println("Class name:"+clazz.getName());
-			// System.out.println(func.toString());
-		} else {
-			path += "/{id}/" + entityObject;
-			System.out.println("'Path=\"/" + path + "\"" + params + "'");
-			func.annotations.add("@PostMapping(path = \"/" + path + "\"" + params + ")");
-			func.addParam("@RequestBody", entity, entityObject);
-			func.addParam("@PathVariable", "long", "id");
-			func.codeLines.add(
-					"Optional<" + name + "> " + name.toLowerCase() + "=" + name.toLowerCase() + "Repo.findById(id);");
-			func.codeLines.add(name + " " + name.toLowerCase() + "_tmp=null;");
-			func.codeLines.add("if(" + name.toLowerCase() + ".isPresent()) " + name.toLowerCase() + "_tmp="
-					+ name.toLowerCase() + ".get();\r\nelse\r\n");
-			func.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
-			String mtmRel=getPlural((name.toLowerCase()));
-			if(classes.get(entity).getProperty(mtmRel)!=null) {
-				func.codeLines.add("List<"+name+"> "+getPlural(name.toLowerCase())+"="+entityObject+".get"+getPlural(name)+"();");
-				func.codeLines.add("if("+getPlural(name.toLowerCase())+"==null)");
-						func.codeLines.add(getPlural(name.toLowerCase())+"=new ArrayList<"+name+">();");
-				func.codeLines.add(getPlural(name.toLowerCase())+".add("+name.toLowerCase()+"_tmp);");
-				func.codeLines.add(entityObject+".set"+getPlural(name)+"("+getPlural(name.toLowerCase())+");");
-			}else
-				func.codeLines.add(entityObject + ".set" + name + "(" + name.toLowerCase() + "_tmp);");
-			if (paramArray != null)
-				for (String param : paramArray)
-					if (!param.equals(name)) {
-						prop = clazz.addProperty("private ", param + "Repository ", param.toLowerCase() + "Repo",
-								false);
-						prop.annotations.add("@Autowired");
-						func.addParam("@RequestParam", "long", param.toLowerCase() + "Id");
-						func.codeLines.add("Optional<" + param + "> " + param.toLowerCase() + "=" + param.toLowerCase()
-								+ "Repo.findById(" + param.toLowerCase() + "Id" + ");");
-						func.codeLines.add(param + " " + param.toLowerCase() + "_tmp=null;");
-						func.codeLines.add("if(" + param.toLowerCase() + ".isPresent()) " + param.toLowerCase()
-								+ "_tmp=" + param.toLowerCase() + ".get();\r\nelse\r\n");
-						func.codeLines.add("throw new Exception(\"" + param + " not found\");\r\n");
-						mtmRel=getPlural((param.toLowerCase()));
-						if(classes.get(entity).getProperty(mtmRel)!=null) {
-							func.codeLines.add("List<"+param+"> "+getPlural(param.toLowerCase())+"="+entityObject+".get"+getPlural(param)+"();");
-							func.codeLines.add("if("+getPlural(param.toLowerCase())+"==null)");
-									func.codeLines.add(getPlural(param.toLowerCase())+"=new ArrayList<"+param+">();");
-							func.codeLines.add(getPlural(param.toLowerCase())+".add("+param.toLowerCase()+"_tmp);");
-							func.codeLines.add(entityObject+".set"+getPlural(param)+"("+getPlural(param.toLowerCase())+");");
-						}else {
-							func.codeLines.add(entityObject + ".set" + param + "(" + param.toLowerCase() + "_tmp);");
-						}
-					}
-
-			func.codeLines.add(entityObject + "=" + entityObject + "Repo.save(" + entityObject + ");");
-			func.codeLines.add("URI uri = URI.create(\"" + entityObject + "/\"+" + entityObject + ".getId());");
-			func.codeLines.add("return ResponseEntity.created(uri).build();");
-			// System.out.println(func.toString());
-		}
-		return clazz;
-	}
+	
 	
 	private void verifyAndResolveRelations(ClassMetaData entity, String rel) {
 		ClassMetaData otm=classes.get(rel);
@@ -625,18 +623,18 @@ public class CodeGen {
 		func.codeLines.add("}catch(Exception e){}");
 	}
 
-	public String generateClasses(String packageName, String folderPath, String startPageTemplate,String htmlTemplate,String jsTemplate,String cssTemplate) throws Exception {
+	public String generateClasses(String packageName, String folderPath, String htmlTemplate,String jsTemplate,String cssTemplate) throws Exception {
 		// String packageName=basePackage.getText();
 		if (packageName == null || packageName.trim().length() == 0) {
 			return ("Please specify base package name like com.example.model");
 		}
-		String navigationButton="<a href='http://localhost:8080/admin-ui/%ref%'><button class='button'>%button%</button></a>";
+		String navigationButton="<a onclick='dynamic_table(\"%%ref%listUrl%\",\"%%ref%editUrl%\")'><button class='button'>%ref%</button></a>";
 		String navigation="";
 		Object keys[] = classes.keySet().toArray();
 		for (Object key : keys) {
 			ClassMetaData clazz = classes.get(key);
 			if ("Entity".equals(clazz.getModelType()) && !clazz.getScope().equalsIgnoreCase("local")) {
-				navigation+=navigationButton.replace("%ref%", clazz.getName().toLowerCase()+".html").replace("%button%", clazz.getName());
+				navigation+=navigationButton.replace("%ref%", clazz.getName());
 				//clazz.exportTypeScript(folderPath, packageName);
 				addHATEAOS(clazz);
 				ClassMetaData resource = classes.get(clazz.getName() + "Resource");
@@ -728,16 +726,16 @@ public class CodeGen {
 				clazz.exportAPI(folderPath, packageName,classes);
 			}	
 		}
-		
+		System.out.println("navigation: "+navigation);
 		for (Object key : keys) {
 			ClassMetaData clazz = classes.get(key);
 			clazz.exportJava(folderPath, packageName);
-			clazz.exportGUI(folderPath, htmlTemplate, navigation);
+			navigation=clazz.exportGUI(folderPath, navigation);
 		}
-		
+		System.out.println("navigation-updated: "+navigation);
 		String dirPath=folderPath.split("java")[0]+"resources/static/admin-ui/";
-		String data = startPageTemplate.replace("%navigation%", navigation);
-		File file=new File(dirPath+"/TypeScript");
+		String data = htmlTemplate.replace("%navigation%", navigation);
+		File file=new File(dirPath);
 		if(!file.exists() || !file.isDirectory()) {
 			file.mkdir();
 		}

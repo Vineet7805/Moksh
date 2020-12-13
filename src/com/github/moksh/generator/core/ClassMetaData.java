@@ -245,7 +245,7 @@ public class ClassMetaData {
 			for (String line : annotations) {
 				data+=line+"\r\n";
 			}
-			if(required)
+			if(required) 
 				data+="@NotEmpty(message = \""+name+" must not be empty\")\r\n";
 			if(description!=null)
 				data+="@Description(value = \""+description+"\")\r\n";
@@ -408,23 +408,23 @@ public class ClassMetaData {
 		return null;
 	}
 	
-	public String exportGUI(String dirPath,String htmlTemplate, String navigation) throws Exception {
+	public String exportGUI(String dirPath, String nav) throws Exception {
 		dirPath=dirPath.split("java")[0]+"resources/static/admin-ui/";
-		String data="";
+		String data=nav;
 		if("entity".equalsIgnoreCase(getModelType())) {
-				data=htmlTemplate.replace("%listUrl%", "http://localhost:8080/"+CodeGen.getPlural(getName().toLowerCase()))
-				.replace("%editUrl%", "http://localhost:8080/"+CodeGen.getPlural(getName().toLowerCase())+"/").replace("%navigation%", navigation);
-			File file=new File(dirPath);
-			if(!file.exists() || !file.isDirectory()) {
-				file.mkdir();
-			}
-			FileOutputStream fos = new FileOutputStream(
-					new File(dirPath + getName().toLowerCase() + ".html"));
-			fos.write(data.getBytes());
-			fos.flush();
-			fos.close();
+				data=nav.replace("%"+getName()+"listUrl%", "http://localhost:8080/"+CodeGen.getPlural(getName().toLowerCase()))
+				.replace("%"+getName()+"editUrl%", "http://localhost:8080/"+CodeGen.getPlural(getName().toLowerCase())+"/");//.replace("%navigation%", navigation);
+//			File file=new File(dirPath);
+//			if(!file.exists() || !file.isDirectory()) {
+//				file.mkdir();
+//			}
+//			FileOutputStream fos = new FileOutputStream(
+//					new File(dirPath + getName().toLowerCase() + ".html"));
+//			fos.write(data.getBytes());
+//			fos.flush();
+//			fos.close();
 		}
-		return null;
+		return data;
 	}
 	
 	public String exportTypeScript1(String dirPath,String packageName) throws Exception {
