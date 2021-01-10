@@ -35,6 +35,7 @@ public class ErrorDialogBox extends Dialog {
 	 */
 	public Object open(Exception err) {
 		error=err;
+		err.printStackTrace();
 		createContents();
 		shell.open();
 		shell.layout();

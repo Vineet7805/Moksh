@@ -13,13 +13,12 @@ import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Composite;
 
-public class CustomDialogBox extends Dialog {
+public class EmptyDialogBox extends Dialog {
 
 	protected Object result;
 	protected Shell shell;
-	private Text textBig;
 	private String input;
 	/**
 	 * Create the dialog.
@@ -28,22 +27,28 @@ public class CustomDialogBox extends Dialog {
 	 */
 	TreeItem item=null;
 	private Text textItem=null;
-	private String value="";
+	private String value=null;
 	int index=0;
-	public CustomDialogBox(Shell parent, int style) {
+	private Runnable runOnOk=null;
+	private Runnable runOnCancel=null;
+	public EmptyDialogBox(Shell parent, int style) {
 		super(parent, style);
-		setText("Edit Text");
+		setText("Editor");
+		shell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.PRIMARY_MODAL);
+		composite = new Composite(shell, SWT.NONE);
+		composite.setLayout(new GridLayout(1, false));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 	}
 	/**
 	 * Open the dialog.
 	 * @return the result
 	 */
-	public Object open(TreeItem ti,int colIndx) {
-		item=ti;
-		index=colIndx;
-		createContents();
-		Rectangle screenSize = shell.getDisplay().getPrimaryMonitor().getBounds();
-		shell.setLocation((screenSize.width - shell.getBounds().width) / 2, (screenSize.height - shell.getBounds().height) / 2);
+	public Object open(Composite composite,Runnable runOnOk,Runnable runOnCancel, Runnable init) {
+		createContents(composite);
+		this.runOnOk=runOnOk;
+		this.runOnCancel=runOnCancel;
+		if(init!=null)
+			init.run();
 		shell.open();
 		shell.layout();
 		Display display = getParent().getDisplay();
@@ -55,53 +60,21 @@ public class CustomDialogBox extends Dialog {
 		return result;
 	}
 	
-	
-	public Object open(Text ti) {
-		textItem=ti;
-		createContents();
-		shell.open();
-		shell.layout();
-		Display display = getParent().getDisplay();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
-		return result;
-	}
-	
-	public String open(String str) {
-		if(str!=null)
-			value=str;
-		createContents();
-		shell.open();
-		shell.layout();
-		Display display = getParent().getDisplay();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
-		return value;
-	}
 
 	/**
 	 * Create contents of the dialog.
 	 */
-	private void createContents() {
-		shell = new Shell(getParent(), getStyle());
-		shell.setSize(700, 450);
+	public Composite composite = null;
+	private void createContents(Composite composite_1) {
+		
+		shell.setSize(560, 600);
 		shell.setText(getText());
 		shell.setLayout(new GridLayout(1, false));
 		
-		textBig = new Text(shell, SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
-		textBig.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-		if(item!=null)
-			textBig.setText(item.getText(index));
-		else if(textItem!=null)
-			textBig.setText(textItem.getText());
-		else
-			textBig.setText(value);
+		//Composite composite_1 = new Composite(composite, SWT.NONE);
+		composite_1.setLayout(new GridLayout(1, false));
+		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		
 		SashForm sashForm = new SashForm(shell, SWT.NONE);
 		sashForm.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
 		
@@ -109,12 +82,8 @@ public class CustomDialogBox extends Dialog {
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				if(item!=null)
-					item.setText(index, textBig.getText());
-				else if(textItem!=null)
-					textItem.setText(textBig.getText());
-				else
-					value=textBig.getText();
+				if(runOnOk!=null)
+					runOnOk.run();
 				shell.dispose();
 			}
 		});
@@ -124,6 +93,8 @@ public class CustomDialogBox extends Dialog {
 		btnCancel.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				if(runOnCancel!=null)
+					runOnCancel.run();
 				shell.dispose();
 			}
 		});

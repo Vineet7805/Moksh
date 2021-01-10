@@ -33,11 +33,8 @@ public class ImportJSON {
 		//System.out.println(jsonWorkspace[0]);
 		//System.out.println(jsonWorkspace[1]);
 	}
- 	private static ImportJSON ij=null;
  	public static ImportJSON getInstance() {
- 		if(ij==null)
- 			 ij=new ImportJSON();
- 		return ij;
+ 			 return new ImportJSON();
  	}
  	
 	
@@ -99,6 +96,7 @@ public class ImportJSON {
 	}
 	
 	public String[] generatePayload(String schemaStr) throws Exception {
+		//System.out.println(schemaStr);
 		Object obj = new JSONParser().parse(schemaStr); 
         JSONObject jo = (JSONObject) obj;
         String orgSchema=jo.toJSONString();
@@ -126,6 +124,7 @@ public class ImportJSON {
 		if(obj instanceof JSONArray) {
         	org=((JSONArray) obj).toJSONString();
         	String json="{\"_root\":"+org+"}";
+        	org=json;
         	obj = new JSONParser().parse(json);
         	jo= (JSONObject) obj;
         }else {

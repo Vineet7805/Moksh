@@ -13,14 +13,16 @@ import com.github.moksh.generator.core.ClassMetaData.Function;
 import com.github.moksh.generator.core.ClassMetaData.Property;
 
 public class CodeGen {
-	public static CodeGen CG = new CodeGen();
+	//public static CodeGen CG = new CodeGen();
 	public Map<String, ClassMetaData> classes;
 	// public static final String LOCATION = "D:\\nvme\\data\\CodeGen";
 
 	private CodeGen() {
 		classes = new HashMap<String, ClassMetaData>();
 	}
-
+	public static CodeGen getInstance() {
+		return new CodeGen();
+	}
 	public ClassMetaData createEntityClass(String name, String scope,String root) {
 		if (scope != null && scope.trim().length() > 0)
 			scope = scope.toLowerCase().trim();

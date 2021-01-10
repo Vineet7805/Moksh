@@ -192,7 +192,10 @@ public class ClassMetaData {
 		public String path;
 		public String custom;
 		public String imports;
-		public Set<String> queryParams; 
+		public String version;
+		public String operationName;
+		public Set<String> queryParams;
+		public String packageName;
 		public void addQueryParam(String name,String type) {
 			if(queryParams.stream().filter(param-> param.toLowerCase().equals((name+":"+type).toLowerCase())).findAny().orElse(null)!=null)
 				queryParams.remove((name+":"+type));
@@ -256,7 +259,7 @@ public class ClassMetaData {
 		}
 	}
 
-	class Function {
+	public class Function {
 		public String name;
 		public String returnType;
 		public String access;
@@ -268,7 +271,7 @@ public class ClassMetaData {
 		public String title;
 		@Override
 		public String toString() {
-			String data="\r\n";
+			String data="";
 			//Adding annotations
 			for (String line : annotations) {
 				data+=line+"\r\n";
@@ -556,5 +559,54 @@ public class ClassMetaData {
 	public void setCustomCode(String customCode) {
 		this.customCode = customCode;
 	}
-
+	String json="";
+	private void appendln(String str) {
+		json+=str+"\n";
+	}
+	private void append(String str) {
+		json+=str;
+	}
+	public String identifier="-~-~-~-010-~-~-~";
+	public String toJsonSchema(Map<String, ClassMetaData> classes) {
+		//appendln("\""+getName()+"\":{");
+		for (Property prop : properties) {
+			if(prop.primitive) {
+				if(prop.type.contains("[]")) {
+					appendln("\""+prop.name+"\":{");
+					appendln("\"type\" : \"array\",");
+					appendln("\"items\": [{");
+					appendln("\"type\" : \""+prop.type.replace("[]", "")+"\"");
+					appendln("}]");
+					append("},");
+				}else {
+					appendln("\""+prop.name+"\":{");
+					appendln("\"type\" : \""+prop.type.toLowerCase()+"\"");
+					append("},");
+				}
+			}else {
+				if(prop.type.contains("List<")) {
+					appendln("\""+prop.type.replace("List<", "").replace(">", "")+"\":{");
+					appendln("\"type\":\"array\",");
+					appendln("\"items\": {");
+					appendln("\"type\":\"object\",");
+					appendln("\"properties\":{");
+					appendln(classes.get(getRoot()+"."+(prop.type.replace("List<", "").replace(">", ""))).toJsonSchema(classes));
+					appendln("}");
+					appendln("}");
+					append("},");
+				}else {
+					appendln("\""+prop.type+"\":{");
+					appendln("\"type\":\"object\",");
+					appendln("\"properties\":{");
+					appendln(classes.get(getRoot()+"."+(prop.type)).toJsonSchema(classes));
+					appendln("}");
+					append("},");
+				}
+			}
+		}
+		appendln(identifier);
+		String tempJson=json;
+		json="";
+		return tempJson;
+	}
 }
