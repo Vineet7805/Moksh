@@ -90,7 +90,6 @@ public class CodeGen {
 		classes.put(name, clazz);
 		return clazz;
 	}
-
 	public ClassMetaData createResourceClass(String name) {
 		String entityClass = name;
 		name += "Resource";
@@ -344,6 +343,7 @@ public class CodeGen {
 	
 	public ClassMetaData addPutRelMapping(ClassMetaData clazz, String entity) {		
 		String name = clazz.getName().replace("Resource", "");
+		System.out.println("Put relation in "+name+" of "+entity);
 		ClassMetaData cmd=classes.get(entity);
 		
 		String objectName = name.toLowerCase();
@@ -368,8 +368,7 @@ public class CodeGen {
 		func.codeLines.add("if(" + name.toLowerCase() + "_persisted.isPresent()) " + name.toLowerCase() + "_tmp="
 				+ name.toLowerCase() + "_persisted.get();\r\nelse\r\n");
 		func.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
-		
-		
+				
 		func.codeLines
 				.add("Optional<" + entity + "> " + entity.toLowerCase() + "_persisted=" + entity.toLowerCase() + "Repo.findById("+entity.toLowerCase()+"Id);");
 		func.codeLines.add(entity + " " + entity.toLowerCase() + "_tmp=null;");
@@ -377,8 +376,6 @@ public class CodeGen {
 					+ entity.toLowerCase() + "_persisted.get();\r\nelse\r\n");
 		func.codeLines.add("throw new Exception(\"" + entity + " not found\");\r\n");
 
-		
-		
 		func.codeLines.add(name.toLowerCase() + "_tmp.get"+getPlural(entity)+"().add("+entity.toLowerCase() + "_tmp);");
 		if(cmd.getProperty(getPlural(name.toLowerCase()))==null)
 			func.codeLines.add(entity.toLowerCase() + "_tmp.set"+name+"("+name.toLowerCase() + "_tmp);");
@@ -514,6 +511,7 @@ public class CodeGen {
 			// System.out.println(func.toString());
 		} else {
 			path += "/{id}/" + getPlural(entityObject);
+			System.out.println("---------------------------"+clazz.getName()+" and "+entity);
 			clazz=addPatchMapping(clazz, entity);
 			System.out.println("'Path=\"/" + path + "\"" + params + "'");
 			func.annotations.add("@PostMapping(path = \"/" + path + "\"" + params + ")");
@@ -539,7 +537,8 @@ public class CodeGen {
 					if (!param.equals(name)) {
 						prop = clazz.addProperty("private ", param + "Repository ", param.toLowerCase() + "Repo",
 								false);
-						clazz=addPatchMapping(clazz, param);
+						System.out.println("+++++++++++++++++++++++++"+clazz.getName()+" and "+param+" entity: "+entity);
+						//clazz=addPatchMapping(clazz, param);
 						prop.annotations.add("@Autowired");
 						func.addParam("@RequestParam", "long", param.toLowerCase() + "Id");
 						func.codeLines.add("Optional<" + param + "> " + param.toLowerCase() + "=" + param.toLowerCase()
@@ -573,6 +572,7 @@ public class CodeGen {
 	
 	private void verifyAndResolveRelations(ClassMetaData entity, String rel) {
 		ClassMetaData otm=classes.get(rel);
+		System.out.println("Adding Relation to: "+rel+" in "+entity.getName());
 		Property otmProp=otm.getProperty(getPlural(entity.getName().toLowerCase()));
 		if(otmProp==null)
 			return;

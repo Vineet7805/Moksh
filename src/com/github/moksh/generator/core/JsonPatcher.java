@@ -59,7 +59,7 @@ public class JsonPatcher {
 
 	public static JsonNode copy(String name, String from, String path, JsonNode jnTarget, String condition,
 			String function, Map<String, List<JPOP>> nestedOpMap) throws Exception {
-		System.out.println("from: '"+from+"' to: '"+path+"' ");
+		//System.out.println("from: '"+from+"' to: '"+path+"' ");
 		boolean mappingArrayMembers = true;
 		ScriptEngineManager factory = null;
 		ScriptEngine engine = null;
@@ -93,7 +93,7 @@ public class JsonPatcher {
 			//System.out.println("Size of from array is " + size);
 			int skipCount = 0;
 			for (int i = 0; i < size; i++) {
-				System.out.println("Copy element no. #" + i+" : skipped: "+(i - skipCount));
+				//System.out.println("Copy element no. #" + i+" : skipped: "+(i - skipCount));
 				String fromXP = from.replace("/*", "/" + i);
 				String pathXP = path.replace("/*", "/" + (i - skipCount));
 				// if(!from.endsWith("/*")) {
@@ -103,7 +103,7 @@ public class JsonPatcher {
 				}
 				String json = jnTarget.at(fromXP).toPrettyString();
 				engine.eval("json={\"object\":" + json + "};");
-				if (!mappingArrayMembers) {
+				//if (!mappingArrayMembers) {
 					boolean skipMapping = false;
 					if (cond != null && cond.trim().length() > 0)
 						skipMapping = !CommonUtils.evaluateCondition(cond, jnTarget, engine);
@@ -111,7 +111,7 @@ public class JsonPatcher {
 						skipCount++;
 						continue;
 					}
-				} 				
+				//} 				
 				String jPatch = null;
 				//adding empty element to the target json body
 				if ((i - skipCount) == jnTarget.at(pathArray).size() && mappingArrayMembers) {

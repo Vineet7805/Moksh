@@ -568,7 +568,6 @@ public class CommonUtils {
 		} catch (Exception e) {
 			new ErrorDialogBox(tree.getShell(), tree.getShell().getStyle()).open(e);
 		}
-
 	}
 
 	public static void enableJsonEditor(Tree tree, TreeItem ti[], String schema,

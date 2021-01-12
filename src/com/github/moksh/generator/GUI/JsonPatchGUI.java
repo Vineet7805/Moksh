@@ -1,5 +1,8 @@
 package com.github.moksh.generator.GUI;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
@@ -435,7 +438,7 @@ public class JsonPatchGUI extends Composite {
 
 		Composite composite = new Composite(composite_14, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, true, 1, 1));
-		GridLayout gl_composite = new GridLayout(8, true);
+		GridLayout gl_composite = new GridLayout(9, true);
 		gl_composite.verticalSpacing = 0;
 		gl_composite.marginHeight = 0;
 		composite.setLayout(gl_composite);
@@ -893,6 +896,19 @@ public class JsonPatchGUI extends Composite {
 			}
 		});
 		btnSetVal.setText("Set Value");
+		
+		Button btnCopyXpath = new Button(composite, SWT.NONE);
+		btnCopyXpath.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				String myString = CommonUtils.getXPath(itemLastSelected, 0, 1);
+				StringSelection stringSelection = new StringSelection(myString);
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				clipboard.setContents(stringSelection, null);
+			}
+		});
+		btnCopyXpath.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
+		btnCopyXpath.setText("Copy xPath");
 
 		btnDropParam = new Button(composite, SWT.NONE);
 		btnDropParam.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
@@ -1191,6 +1207,7 @@ public class JsonPatchGUI extends Composite {
 		});
 		treeLeft.addListener(SWT.EraseItem, new Listener() {
 			public void handleEvent(Event event) {
+				try {
 				if ((event.detail & SWT.SELECTED) != 0) {
 					GC gc = event.gc;
 					Rectangle area = treeLeft.getClientArea();
@@ -1227,6 +1244,8 @@ public class JsonPatchGUI extends Composite {
 							btnDropParam.setText("Drop Param");
 					}
 
+				}} catch (Exception e) {
+					new ErrorDialogBox(shell, shell.getStyle()).open(e);
 				}
 			}
 		});
