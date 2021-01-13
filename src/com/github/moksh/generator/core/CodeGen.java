@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.moksh.generator.GUI.Utils.CommonUtils;
 import com.github.moksh.generator.core.ClassMetaData.API;
 import com.github.moksh.generator.core.ClassMetaData.Function;
 import com.github.moksh.generator.core.ClassMetaData.Property;
@@ -128,11 +129,11 @@ public class CodeGen {
 
 	public ClassMetaData addListGetMapping(ClassMetaData clazz, String entity) {
 		String name = clazz.getName().replace("Resource", "");
-		Property prop = clazz.addProperty("private ", entity + "Repository", entity.toLowerCase() + "Repo", false);
+		Property prop = clazz.addProperty("private ", entity + "Repository", CommonUtils.toLowerFirst(entity) + "Repo", false);
 		prop.annotations.add("@Autowired");
 		Function func = clazz.addFunction("public", "List<" + entity + ">", "get" + getPlural(entity));
 
-		String path = getPlural(name.toLowerCase());
+		String path = getPlural(CommonUtils.toLowerFirst(name));
 		if (name.equals(entity)) {
 			func.annotations.add("@GetMapping(path = \"/" + path + "\")");
 			func.codeLines.add("List<" + entity + "> fetched="+"(List<" + entity + ">)" + prop.name + ".findAll();");
@@ -140,20 +141,20 @@ public class CodeGen {
 			func.codeLines.add("if(fetched.size()==0) fetched.add(new "+entity+"());");
 			func.codeLines.add("return fetched;");
 		} else {
-			path = path + "/{id}/" + getPlural(entity.toLowerCase());
+			path = path + "/{id}/" + getPlural(CommonUtils.toLowerFirst(entity));
 			func.annotations.add("@GetMapping(path = \"/" + path + "\")");
 			func.addParam("@PathVariable", "long", "id");
 			func.exceptions.add("Exception");
 			func.codeLines.add(
-					"Optional<" + name + "> " + name.toLowerCase() + "=" + name.toLowerCase() + "Repo.findById(id);");
-			func.codeLines.add("if(" + name.toLowerCase() + ".isPresent()){ ");
-			func.codeLines.add("List<" + entity + "> " + getPlural(entity.toLowerCase()) + "=" + name.toLowerCase() + ".get().get"
+					"Optional<" + name + "> " + CommonUtils.toLowerFirst(name) + "=" + CommonUtils.toLowerFirst(name) + "Repo.findById(id);");
+			func.codeLines.add("if(" + CommonUtils.toLowerFirst(name) + ".isPresent()){ ");
+			func.codeLines.add("List<" + entity + "> " + getPlural(CommonUtils.toLowerFirst(entity)) + "=" + CommonUtils.toLowerFirst(name) + ".get().get"
 					+ getPlural(entity) + "();");
-			func.codeLines.add("if(" + getPlural(entity.toLowerCase()) + "==null || " + getPlural(entity.toLowerCase()) + ".size()==0){");
-			func.codeLines.add(getPlural(entity.toLowerCase()) + "=new ArrayList<"+entity+">();"+getPlural(entity.toLowerCase()) + ".add(new "+entity+"());}else");
-			func.codeLines.add(getPlural(entity.toLowerCase())+ ".forEach(obj-> obj.generateLinks());\r\n");
-			func.codeLines.add("return " + getPlural(entity.toLowerCase())  + ";\r\n}");
-			// func.codeLines.add("return "+entity.toLowerCase()+";\r\n}");
+			func.codeLines.add("if(" + getPlural(CommonUtils.toLowerFirst(entity)) + "==null || " + getPlural(CommonUtils.toLowerFirst(entity)) + ".size()==0){");
+			func.codeLines.add(getPlural(CommonUtils.toLowerFirst(entity)) + "=new ArrayList<"+entity+">();"+getPlural(CommonUtils.toLowerFirst(entity)) + ".add(new "+entity+"());}else");
+			func.codeLines.add(getPlural(CommonUtils.toLowerFirst(entity))+ ".forEach(obj-> obj.generateLinks());\r\n");
+			func.codeLines.add("return " + getPlural(CommonUtils.toLowerFirst(entity))  + ";\r\n}");
+			// func.codeLines.add("return "+CommonUtils.toLowerFirst(entity)+";\r\n}");
 			func.codeLines.add("throw new Exception(\"" + name + " not found\");");
 		}
 		return clazz;
@@ -161,33 +162,33 @@ public class CodeGen {
 
 	public ClassMetaData addGetMapping(ClassMetaData clazz, String entity) {
 		String name = clazz.getName().replace("Resource", "");
-		Property prop = clazz.addProperty("private ", entity + "Repository", entity.toLowerCase() + "Repo", false);
+		Property prop = clazz.addProperty("private ", entity + "Repository", CommonUtils.toLowerFirst(entity) + "Repo", false);
 		prop.annotations.add("@Autowired");
 		Function func = clazz.addFunction("public", entity, "get" + entity);
-		String path = getPlural(name.toLowerCase()) + "/{id}";
+		String path = getPlural(CommonUtils.toLowerFirst(name)) + "/{id}";
 		func.addParam("@PathVariable", "long", "id");
 		if (name.equals(entity)) {
 			func.annotations.add("@GetMapping(path = \"/" + path + "\")");
 			func.exceptions.add("Exception");
-			func.codeLines.add("Optional<" + entity + "> " + entity.toLowerCase() + "=" + prop.name + ".findById(id);");
+			func.codeLines.add("Optional<" + entity + "> " + CommonUtils.toLowerFirst(entity) + "=" + prop.name + ".findById(id);");
 			func.codeLines
-					.add("if(!" + entity.toLowerCase() + ".isPresent())");
+					.add("if(!" + CommonUtils.toLowerFirst(entity) + ".isPresent())");
 			func.codeLines.add("throw new Exception(\"" + entity + " not found\");");
-			func.codeLines.add(entity+" fetched=" + entity.toLowerCase() + ".get();");
+			func.codeLines.add(entity+" fetched=" + CommonUtils.toLowerFirst(entity) + ".get();");
 			func.codeLines.add("fetched.generateLinks();");
 			func.codeLines.add("return fetched;");
 		} else {
-			func.annotations.add("@GetMapping(path = \"/" + path + "/" + getPlural(entity.toLowerCase()) + "\")");
+			func.annotations.add("@GetMapping(path = \"/" + path + "/" + getPlural(CommonUtils.toLowerFirst(entity)) + "\")");
 			func.exceptions.add("Exception");
 			func.codeLines.add(
-					"Optional<" + name + "> " + name.toLowerCase() + "=" + name.toLowerCase() + "Repo.findById(id);");
-			func.codeLines.add("if(" + name.toLowerCase() + ".isPresent()){ ");
+					"Optional<" + name + "> " + CommonUtils.toLowerFirst(name) + "=" + CommonUtils.toLowerFirst(name) + "Repo.findById(id);");
+			func.codeLines.add("if(" + CommonUtils.toLowerFirst(name) + ".isPresent()){ ");
 			func.codeLines.add(
-					entity + " " + entity.toLowerCase() + "_tmp=" + name.toLowerCase() + ".get().get" + entity + "();");
-			func.codeLines.add("if(" + entity.toLowerCase() + "_tmp==null)");
-			func.codeLines.add(entity.toLowerCase() + "_tmp=new "+entity+"();");
-			func.codeLines.add(entity.toLowerCase() + "_tmp.generateLinks();\r\n");
-			func.codeLines.add("return " + entity.toLowerCase() + "_tmp;\r\n}");
+					entity + " " + CommonUtils.toLowerFirst(entity) + "_tmp=" + CommonUtils.toLowerFirst(name) + ".get().get" + entity + "();");
+			func.codeLines.add("if(" + CommonUtils.toLowerFirst(entity) + "_tmp==null)");
+			func.codeLines.add(CommonUtils.toLowerFirst(entity) + "_tmp=new "+entity+"();");
+			func.codeLines.add(CommonUtils.toLowerFirst(entity) + "_tmp.generateLinks();\r\n");
+			func.codeLines.add("return " + CommonUtils.toLowerFirst(entity) + "_tmp;\r\n}");
 			func.codeLines.add("throw new Exception(\"" + name + " not found\");");
 		}
 		return clazz;
@@ -215,9 +216,9 @@ public class CodeGen {
 	}
 	public ClassMetaData addDeleteMapping(ClassMetaData clazz) {
 		String name = clazz.getName().replace("Resource", "");
-		String objectName = name.toLowerCase();
+		String objectName = CommonUtils.toLowerFirst(name);
 		String path = getPlural(objectName) + "/{id}";
-		Property prop = clazz.addProperty("private ", name + "Repository", name.toLowerCase() + "Repo", false);
+		Property prop = clazz.addProperty("private ", name + "Repository", CommonUtils.toLowerFirst(name) + "Repo", false);
 		prop.annotations.add("@Autowired");
 		if (clazz.getFunction("delete" + name) != null)
 			return null;
@@ -229,18 +230,18 @@ public class CodeGen {
 		func.annotations.add("@DeleteMapping(path = \"/" + path + "\")");
 		func.addParam("@PathVariable", "long", "id");
 		func.exceptions.add("Exception");
-		func.codeLines.add("Optional<" + name + "> " + name.toLowerCase() + "=" + name.toLowerCase() + "Repo.findById(id);");
+		func.codeLines.add("Optional<" + name + "> " + CommonUtils.toLowerFirst(name) + "=" + CommonUtils.toLowerFirst(name) + "Repo.findById(id);");
 		func.codeLines
-				.add("if(" + name.toLowerCase() + ".isPresent()) " + name.toLowerCase() + ".get(); else");
+				.add("if(" + CommonUtils.toLowerFirst(name) + ".isPresent()) " + CommonUtils.toLowerFirst(name) + ".get(); else");
 		func.codeLines.add("throw new Exception(\"" + name + " not found\");");
-		func.codeLines.add(name.toLowerCase() + "Repo.deleteById(id);");
+		func.codeLines.add(CommonUtils.toLowerFirst(name) + "Repo.deleteById(id);");
 		return clazz;
 	}
 	
 	public ClassMetaData addPatchMapping(ClassMetaData clazz, String entity) {
 		String name = clazz.getName().replace("Resource", "");
-		String entityObject = entity.toLowerCase();
-		String objectName = name.toLowerCase();
+		String entityObject = CommonUtils.toLowerFirst(entity);
+		String objectName = CommonUtils.toLowerFirst(name);
 		String path = getPlural(objectName);
 		path += "/{id}/" + getPlural(entityObject);
 		//System.out.println("'Path=\"/" + path + "\"" + params + "'");
@@ -272,28 +273,28 @@ public class CodeGen {
 			addRel.addParam("@RequestBody", entity, entityObject);
 			addRel.addParam("@PathVariable", "long", "id");
 			addRel.codeLines.add(
-					"Optional<" + name + "> " + name.toLowerCase() + "=" + name.toLowerCase() + "Repo.findById(id);");
-			addRel.codeLines.add(name + " " + name.toLowerCase() + "_tmp=null;");
-			addRel.codeLines.add("if(" + name.toLowerCase() + ".isPresent()) " + name.toLowerCase() + "_tmp="
-					+ name.toLowerCase() + ".get();\r\nelse\r\n");
+					"Optional<" + name + "> " + CommonUtils.toLowerFirst(name) + "=" + CommonUtils.toLowerFirst(name) + "Repo.findById(id);");
+			addRel.codeLines.add(name + " " + CommonUtils.toLowerFirst(name) + "_tmp=null;");
+			addRel.codeLines.add("if(" + CommonUtils.toLowerFirst(name) + ".isPresent()) " + CommonUtils.toLowerFirst(name) + "_tmp="
+					+ CommonUtils.toLowerFirst(name) + ".get();\r\nelse\r\n");
 			addRel.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
 			
-			String getValFuncName=uniqueProperty.name.substring(0, 1).toUpperCase()+uniqueProperty.name.substring(1).toLowerCase();
+			String getValFuncName=CommonUtils.toUpperFirst(uniqueProperty.name);//.substring(0, 1).toUpperCase()+uniqueProperty.name.substring(1).toLowerCase();
 			addRel.codeLines.add("TypedQuery<"+entity+"> "+entityObject+"_q2 = entityManager.createQuery(\"SELECT obj FROM "+entity+" obj where obj."+uniqueProperty.name+"='\"+"+entityObject+".get"+getValFuncName+"()+\"'\", "+entity+".class);");
 			addRel.codeLines.add("List<"+entity+"> "+entityObject+"_rel= "+entityObject+"_q2.getResultList();");
 			addRel.codeLines.add("if("+entityObject+"_rel!=null && "+entityObject+"_rel.size()>0) {");
 			addRel.codeLines.add(entityObject+"_rel.get(0);");
 			Property prop=classes.get(name).getProperty(getPlural(entityObject));
 			if(prop==null)
-				addRel.codeLines.add(name.toLowerCase()+"_tmp.set"+entity+"("+entityObject+"_rel.get(0));");
+				addRel.codeLines.add(CommonUtils.toLowerFirst(name)+"_tmp.set"+entity+"("+entityObject+"_rel.get(0));");
 			else
-				addRel.codeLines.add(name.toLowerCase()+"_tmp.get"+getPlural(entity)+"().add("+entityObject+"_rel.get(0));");
-			prop=classes.get(entity).getProperty(getPlural(name.toLowerCase()));
+				addRel.codeLines.add(CommonUtils.toLowerFirst(name)+"_tmp.get"+getPlural(entity)+"().add("+entityObject+"_rel.get(0));");
+			prop=classes.get(entity).getProperty(getPlural(CommonUtils.toLowerFirst(name)));
 			if(prop==null)
-				addRel.codeLines.add(entityObject+"_rel.get(0).set"+name+"("+name.toLowerCase()+"_tmp);");//addRel.codeLines.add(name.toLowerCase()+"_tmp.set"+entity+"("+entityObject+"_rel.get(0));");
+				addRel.codeLines.add(entityObject+"_rel.get(0).set"+name+"("+CommonUtils.toLowerFirst(name)+"_tmp);");//addRel.codeLines.add(CommonUtils.toLowerFirst(name)+"_tmp.set"+entity+"("+entityObject+"_rel.get(0));");
 			else
-				addRel.codeLines.add(entityObject+"_rel.get(0).get"+getPlural(name)+"().add("+name.toLowerCase()+"_tmp);");//name.toLowerCase()+"_tmp.get"+getPlural(entity)+"().add("+entityObject+"_rel.get(0));");
-			addRel.codeLines.add(name.toLowerCase()+"Repo.save("+name.toLowerCase()+"_tmp);");
+				addRel.codeLines.add(entityObject+"_rel.get(0).get"+getPlural(name)+"().add("+CommonUtils.toLowerFirst(name)+"_tmp);");//CommonUtils.toLowerFirst(name)+"_tmp.get"+getPlural(entity)+"().add("+entityObject+"_rel.get(0));");
+			addRel.codeLines.add(CommonUtils.toLowerFirst(name)+"Repo.save("+CommonUtils.toLowerFirst(name)+"_tmp);");
 			addRel.codeLines.add("return "+entityObject+"_rel.get(0);");
 			addRel.codeLines.add("}");
 			addRel.codeLines.add("throw new Exception(\"" + entity + " not found\");\r\n");
@@ -303,10 +304,10 @@ public class CodeGen {
 	
 	public ClassMetaData addPutMapping(ClassMetaData clazz) {
 		String name = clazz.getName().replace("Resource", "");
-		String objectName = name.toLowerCase();
+		String objectName = CommonUtils.toLowerFirst(name);
 		String path = getPlural(objectName) + "/{id}";
 
-		Property prop = clazz.addProperty("private ", name + "Repository", name.toLowerCase() + "Repo", false);
+		Property prop = clazz.addProperty("private ", name + "Repository", CommonUtils.toLowerFirst(name) + "Repo", false);
 		prop.annotations.add("@Autowired");
 		if (clazz.getFunction("update" + name) != null)
 			return null;
@@ -321,10 +322,10 @@ public class CodeGen {
 		func.addParam("@RequestBody", name, objectName);
 
 		func.codeLines
-				.add("Optional<" + name + "> " + name.toLowerCase() + "_persisted=" + name.toLowerCase() + "Repo.findById(id);");
-		func.codeLines.add(name + " " + name.toLowerCase() + "_tmp=null;");
-		func.codeLines.add("if(" + name.toLowerCase() + "_persisted.isPresent()) " + name.toLowerCase() + "_tmp="
-				+ name.toLowerCase() + "_persisted.get();\r\nelse\r\n");
+				.add("Optional<" + name + "> " + CommonUtils.toLowerFirst(name) + "_persisted=" + CommonUtils.toLowerFirst(name) + "Repo.findById(id);");
+		func.codeLines.add(name + " " + CommonUtils.toLowerFirst(name) + "_tmp=null;");
+		func.codeLines.add("if(" + CommonUtils.toLowerFirst(name) + "_persisted.isPresent()) " + CommonUtils.toLowerFirst(name) + "_tmp="
+				+ CommonUtils.toLowerFirst(name) + "_persisted.get();\r\nelse\r\n");
 		func.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
 		List<Property> properties=classes.get(name).getProperties();
 		for (Property property : properties) {
@@ -332,12 +333,12 @@ public class CodeGen {
 				String propName=property.name;
 				propName=propName.substring(0, 1).toUpperCase()+propName.substring(1);
 				if(!"id".equalsIgnoreCase(propName))
-					func.codeLines.add(name.toLowerCase() + "_tmp.set"+propName+"("+objectName + ".get"+propName+"()"+");");
+					func.codeLines.add(CommonUtils.toLowerFirst(name) + "_tmp.set"+propName+"("+objectName + ".get"+propName+"()"+");");
 			}
 		}
-		func.codeLines.add(objectName + "=" + objectName + "Repo.save(" +name.toLowerCase() + "_tmp);");
-		func.codeLines.add(name.toLowerCase() + "_tmp.generateLinks();");
-		func.codeLines.add("return "+name.toLowerCase() + "_tmp;");
+		func.codeLines.add(objectName + "=" + objectName + "Repo.save(" +CommonUtils.toLowerFirst(name) + "_tmp);");
+		func.codeLines.add(CommonUtils.toLowerFirst(name) + "_tmp.generateLinks();");
+		func.codeLines.add("return "+CommonUtils.toLowerFirst(name) + "_tmp;");
 		return clazz;
 	}
 	
@@ -346,10 +347,10 @@ public class CodeGen {
 		System.out.println("Put relation in "+name+" of "+entity);
 		ClassMetaData cmd=classes.get(entity);
 		
-		String objectName = name.toLowerCase();
-		String path = getPlural(objectName) + "/{"+objectName+"Id}/"+getPlural(entity.toLowerCase())+"/{"+entity.toLowerCase()+"Id}";
+		String objectName = CommonUtils.toLowerFirst(name);
+		String path = getPlural(objectName) + "/{"+objectName+"Id}/"+getPlural(CommonUtils.toLowerFirst(entity))+"/{"+CommonUtils.toLowerFirst(entity)+"Id}";
 
-		Property prop = clazz.addProperty("private ", entity + "Repository", entity.toLowerCase() + "Repo", false);
+		Property prop = clazz.addProperty("private ", entity + "Repository", CommonUtils.toLowerFirst(entity) + "Repo", false);
 		prop.annotations.add("@Autowired");
 		if (clazz.getFunction("add" + entity) != null)
 			return null;
@@ -361,32 +362,32 @@ public class CodeGen {
 		System.out.println("'Path=\"" + path + "\"'");
 		func.annotations.add("@PutMapping(path = \"/" + path + "\")");
 		func.addParam("@PathVariable", "long", objectName+"Id");
-		func.addParam("@PathVariable", "long", entity.toLowerCase()+"Id");
+		func.addParam("@PathVariable", "long", CommonUtils.toLowerFirst(entity)+"Id");
 		func.codeLines
-				.add("Optional<" + name + "> " + name.toLowerCase() + "_persisted=" + name.toLowerCase() + "Repo.findById("+objectName+"Id);");
-		func.codeLines.add(name + " " + name.toLowerCase() + "_tmp=null;");
-		func.codeLines.add("if(" + name.toLowerCase() + "_persisted.isPresent()) " + name.toLowerCase() + "_tmp="
-				+ name.toLowerCase() + "_persisted.get();\r\nelse\r\n");
+				.add("Optional<" + name + "> " + CommonUtils.toLowerFirst(name) + "_persisted=" + CommonUtils.toLowerFirst(name) + "Repo.findById("+objectName+"Id);");
+		func.codeLines.add(name + " " + CommonUtils.toLowerFirst(name) + "_tmp=null;");
+		func.codeLines.add("if(" + CommonUtils.toLowerFirst(name) + "_persisted.isPresent()) " + CommonUtils.toLowerFirst(name) + "_tmp="
+				+ CommonUtils.toLowerFirst(name) + "_persisted.get();\r\nelse\r\n");
 		func.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
 				
 		func.codeLines
-				.add("Optional<" + entity + "> " + entity.toLowerCase() + "_persisted=" + entity.toLowerCase() + "Repo.findById("+entity.toLowerCase()+"Id);");
-		func.codeLines.add(entity + " " + entity.toLowerCase() + "_tmp=null;");
-		func.codeLines.add("if(" + entity.toLowerCase() + "_persisted.isPresent()) " + entity.toLowerCase() + "_tmp="
-					+ entity.toLowerCase() + "_persisted.get();\r\nelse\r\n");
+				.add("Optional<" + entity + "> " + CommonUtils.toLowerFirst(entity) + "_persisted=" + CommonUtils.toLowerFirst(entity) + "Repo.findById("+CommonUtils.toLowerFirst(entity)+"Id);");
+		func.codeLines.add(entity + " " + CommonUtils.toLowerFirst(entity) + "_tmp=null;");
+		func.codeLines.add("if(" + CommonUtils.toLowerFirst(entity) + "_persisted.isPresent()) " + CommonUtils.toLowerFirst(entity) + "_tmp="
+					+ CommonUtils.toLowerFirst(entity) + "_persisted.get();\r\nelse\r\n");
 		func.codeLines.add("throw new Exception(\"" + entity + " not found\");\r\n");
 
-		func.codeLines.add(name.toLowerCase() + "_tmp.get"+getPlural(entity)+"().add("+entity.toLowerCase() + "_tmp);");
-		if(cmd.getProperty(getPlural(name.toLowerCase()))==null)
-			func.codeLines.add(entity.toLowerCase() + "_tmp.set"+name+"("+name.toLowerCase() + "_tmp);");
+		func.codeLines.add(CommonUtils.toLowerFirst(name) + "_tmp.get"+getPlural(entity)+"().add("+CommonUtils.toLowerFirst(entity) + "_tmp);");
+		if(cmd.getProperty(getPlural(CommonUtils.toLowerFirst(name)))==null)
+			func.codeLines.add(CommonUtils.toLowerFirst(entity) + "_tmp.set"+name+"("+CommonUtils.toLowerFirst(name) + "_tmp);");
 		else
-			func.codeLines.add(entity.toLowerCase() + "_tmp.get"+getPlural(name)+"().add("+name.toLowerCase() + "_tmp);");				
+			func.codeLines.add(CommonUtils.toLowerFirst(entity) + "_tmp.get"+getPlural(name)+"().add("+CommonUtils.toLowerFirst(name) + "_tmp);");				
 		
-		func.codeLines.add(objectName + "Repo.save(" +name.toLowerCase() + "_tmp);");
-		func.codeLines.add(entity.toLowerCase() + "Repo.save(" +entity.toLowerCase() + "_tmp);");
+		func.codeLines.add(objectName + "Repo.save(" +CommonUtils.toLowerFirst(name) + "_tmp);");
+		func.codeLines.add(CommonUtils.toLowerFirst(entity) + "Repo.save(" +CommonUtils.toLowerFirst(entity) + "_tmp);");
 		
-		func.codeLines.add(entity.toLowerCase() + "_tmp.generateLinks();");
-		func.codeLines.add("return "+entity.toLowerCase() + "_tmp;");
+		func.codeLines.add(CommonUtils.toLowerFirst(entity) + "_tmp.generateLinks();");
+		func.codeLines.add("return "+CommonUtils.toLowerFirst(entity) + "_tmp;");
 		return addDeleteRelMapping(clazz,entity);
 		//return clazz;
 	}
@@ -395,10 +396,10 @@ public class CodeGen {
 		String name = clazz.getName().replace("Resource", "");
 		ClassMetaData cmd=classes.get(entity);
 		
-		String objectName = name.toLowerCase();
-		String path = getPlural(objectName) + "/{"+objectName+"Id}/"+getPlural(entity.toLowerCase())+"/{"+entity.toLowerCase()+"Id}";
+		String objectName = CommonUtils.toLowerFirst(name);
+		String path = getPlural(objectName) + "/{"+objectName+"Id}/"+getPlural(CommonUtils.toLowerFirst(entity))+"/{"+CommonUtils.toLowerFirst(entity)+"Id}";
 
-		Property prop = clazz.addProperty("private ", entity + "Repository", entity.toLowerCase() + "Repo", false);
+		Property prop = clazz.addProperty("private ", entity + "Repository", CommonUtils.toLowerFirst(entity) + "Repo", false);
 		prop.annotations.add("@Autowired");
 		if (clazz.getFunction("remove" + entity) != null)
 			return null;
@@ -410,34 +411,34 @@ public class CodeGen {
 		System.out.println("'Path=\"" + path + "\"'");
 		func.annotations.add("@DeleteMapping(path = \"/" + path + "\")");
 		func.addParam("@PathVariable", "long", objectName+"Id");
-		func.addParam("@PathVariable", "long", entity.toLowerCase()+"Id");
+		func.addParam("@PathVariable", "long", CommonUtils.toLowerFirst(entity)+"Id");
 		func.codeLines
-				.add("Optional<" + name + "> " + name.toLowerCase() + "_persisted=" + name.toLowerCase() + "Repo.findById("+objectName+"Id);");
-		func.codeLines.add(name + " " + name.toLowerCase() + "_tmp=null;");
-		func.codeLines.add("if(" + name.toLowerCase() + "_persisted.isPresent()) " + name.toLowerCase() + "_tmp="
-				+ name.toLowerCase() + "_persisted.get();\r\nelse\r\n");
+				.add("Optional<" + name + "> " + CommonUtils.toLowerFirst(name) + "_persisted=" + CommonUtils.toLowerFirst(name) + "Repo.findById("+objectName+"Id);");
+		func.codeLines.add(name + " " + CommonUtils.toLowerFirst(name) + "_tmp=null;");
+		func.codeLines.add("if(" + CommonUtils.toLowerFirst(name) + "_persisted.isPresent()) " + CommonUtils.toLowerFirst(name) + "_tmp="
+				+ CommonUtils.toLowerFirst(name) + "_persisted.get();\r\nelse\r\n");
 		func.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
 		
 		
 		func.codeLines
-				.add("Optional<" + entity + "> " + entity.toLowerCase() + "_persisted=" + entity.toLowerCase() + "Repo.findById("+entity.toLowerCase()+"Id);");
-		func.codeLines.add(entity + " " + entity.toLowerCase() + "_tmp=null;");
-		func.codeLines.add("if(" + entity.toLowerCase() + "_persisted.isPresent()) " + entity.toLowerCase() + "_tmp="
-					+ entity.toLowerCase() + "_persisted.get();\r\nelse\r\n");
+				.add("Optional<" + entity + "> " + CommonUtils.toLowerFirst(entity) + "_persisted=" + CommonUtils.toLowerFirst(entity) + "Repo.findById("+CommonUtils.toLowerFirst(entity)+"Id);");
+		func.codeLines.add(entity + " " + CommonUtils.toLowerFirst(entity) + "_tmp=null;");
+		func.codeLines.add("if(" + CommonUtils.toLowerFirst(entity) + "_persisted.isPresent()) " + CommonUtils.toLowerFirst(entity) + "_tmp="
+					+ CommonUtils.toLowerFirst(entity) + "_persisted.get();\r\nelse\r\n");
 		func.codeLines.add("throw new Exception(\"" + entity + " not found\");\r\n");
 
 		
-		func.codeLines.add(name.toLowerCase() + "_tmp.get"+getPlural(entity)+"().remove("+entity.toLowerCase() + "_tmp);");
-		if(cmd.getProperty(getPlural(name.toLowerCase()))==null)
-			func.codeLines.add(entity.toLowerCase() + "_tmp.set"+name+"(null);");
+		func.codeLines.add(CommonUtils.toLowerFirst(name) + "_tmp.get"+getPlural(entity)+"().remove("+CommonUtils.toLowerFirst(entity) + "_tmp);");
+		if(cmd.getProperty(getPlural(CommonUtils.toLowerFirst(name)))==null)
+			func.codeLines.add(CommonUtils.toLowerFirst(entity) + "_tmp.set"+name+"(null);");
 		else
-			func.codeLines.add(entity.toLowerCase() + "_tmp.get"+getPlural(name)+"().remove("+name.toLowerCase() + "_tmp);");				
+			func.codeLines.add(CommonUtils.toLowerFirst(entity) + "_tmp.get"+getPlural(name)+"().remove("+CommonUtils.toLowerFirst(name) + "_tmp);");				
 		
-		func.codeLines.add(objectName + "Repo.save(" +name.toLowerCase() + "_tmp);");
-		func.codeLines.add(entity.toLowerCase() + "Repo.save(" +entity.toLowerCase() + "_tmp);");
+		func.codeLines.add(objectName + "Repo.save(" +CommonUtils.toLowerFirst(name) + "_tmp);");
+		func.codeLines.add(CommonUtils.toLowerFirst(entity) + "Repo.save(" +CommonUtils.toLowerFirst(entity) + "_tmp);");
 		
-		func.codeLines.add(entity.toLowerCase() + "_tmp.generateLinks();");
-		func.codeLines.add("return "+entity.toLowerCase() + "_tmp;");
+		func.codeLines.add(CommonUtils.toLowerFirst(entity) + "_tmp.generateLinks();");
+		func.codeLines.add("return "+CommonUtils.toLowerFirst(entity) + "_tmp;");
 
 		return clazz;
 	}
@@ -445,8 +446,8 @@ public class CodeGen {
 
 	public ClassMetaData addPostMapping(ClassMetaData clazz, String entity) {
 		String name = clazz.getName().replace("Resource", "");
-		String entityObject = entity.toLowerCase();
-		String objectName = name.toLowerCase();
+		String entityObject = CommonUtils.toLowerFirst(entity);
+		String objectName = CommonUtils.toLowerFirst(name);
 		String path = getPlural(objectName);
 		String params = "";
 		String paramArray[] = classes.get(entity).getRequiredNonPrimitiveProps();
@@ -460,7 +461,7 @@ public class CodeGen {
 		}
 		for (String param : paramArray) {
 			if (!param.equals(name))
-				params += "\"" + param.toLowerCase() + "Id\",";
+				params += "\"" + CommonUtils.toLowerFirst(param) + "Id\",";
 		}
 		if (params.endsWith(",")) {
 			params += ",";
@@ -470,7 +471,7 @@ public class CodeGen {
 			params = ",params= {" + params + "}";
 		}
 
-		Property prop = clazz.addProperty("private ", entity + "Repository", entity.toLowerCase() + "Repo", false);
+		Property prop = clazz.addProperty("private ", entity + "Repository", CommonUtils.toLowerFirst(entity) + "Repo", false);
 		prop.annotations.add("@Autowired");
 		if (clazz.getFunction("create" + entity) != null)
 			return null;
@@ -490,17 +491,17 @@ public class CodeGen {
 				if (paramArray != null) {
 					for (String param : paramArray)
 						if (!param.equals(name)) {
-							prop = clazz.addProperty("private ", param + "Repository ", param.toLowerCase() + "Repo",
+							prop = clazz.addProperty("private ", param + "Repository ", CommonUtils.toLowerFirst(param) + "Repo",
 									false);
 							prop.annotations.add("@Autowired");
-							func.addParam("@RequestParam", "long", param.toLowerCase() + "Id");
-							func.codeLines.add("Optional<" + param + "> " + param.toLowerCase() + "="
-									+ param.toLowerCase() + "Repo.findById(" + param.toLowerCase() + "Id" + ");");
-							func.codeLines.add(param + " " + param.toLowerCase() + "_tmp=null;");
-							func.codeLines.add("if(" + param.toLowerCase() + ".isPresent()) " + param.toLowerCase()
-									+ "_tmp=" + param.toLowerCase() + ".get();\r\nelse\r\n");
+							func.addParam("@RequestParam", "long", CommonUtils.toLowerFirst(param) + "Id");
+							func.codeLines.add("Optional<" + param + "> " + CommonUtils.toLowerFirst(param) + "="
+									+ CommonUtils.toLowerFirst(param) + "Repo.findById(" + CommonUtils.toLowerFirst(param) + "Id" + ");");
+							func.codeLines.add(param + " " + CommonUtils.toLowerFirst(param) + "_tmp=null;");
+							func.codeLines.add("if(" + CommonUtils.toLowerFirst(param) + ".isPresent()) " + CommonUtils.toLowerFirst(param)
+									+ "_tmp=" + CommonUtils.toLowerFirst(param) + ".get();\r\nelse\r\n");
 							func.codeLines.add("throw new Exception(\"" + param + " not found\");\r\n");
-							func.codeLines.add(entityObject + ".set" + param + "(" + param.toLowerCase() + "_tmp);");
+							func.codeLines.add(entityObject + ".set" + param + "(" + CommonUtils.toLowerFirst(param) + "_tmp);");
 						}
 					func.codeLines.add(entityObject + "=" + entityObject + "Repo.save(" + entityObject + ");");
 					func.codeLines.add(entityObject+".generateLinks();");
@@ -518,44 +519,44 @@ public class CodeGen {
 			func.addParam("@RequestBody", entity, entityObject);
 			func.addParam("@PathVariable", "long", "id");
 			func.codeLines.add(
-					"Optional<" + name + "> " + name.toLowerCase() + "=" + name.toLowerCase() + "Repo.findById(id);");
-			func.codeLines.add(name + " " + name.toLowerCase() + "_tmp=null;");
-			func.codeLines.add("if(" + name.toLowerCase() + ".isPresent()) " + name.toLowerCase() + "_tmp="
-					+ name.toLowerCase() + ".get();\r\nelse\r\n");
+					"Optional<" + name + "> " + CommonUtils.toLowerFirst(name) + "=" + CommonUtils.toLowerFirst(name) + "Repo.findById(id);");
+			func.codeLines.add(name + " " + CommonUtils.toLowerFirst(name) + "_tmp=null;");
+			func.codeLines.add("if(" + CommonUtils.toLowerFirst(name) + ".isPresent()) " + CommonUtils.toLowerFirst(name) + "_tmp="
+					+ CommonUtils.toLowerFirst(name) + ".get();\r\nelse\r\n");
 			func.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
-			String mtmRel=getPlural((name.toLowerCase()));
+			String mtmRel=getPlural((CommonUtils.toLowerFirst(name)));
 			if(classes.get(entity).getProperty(mtmRel)!=null) {
-				func.codeLines.add("List<"+name+"> "+getPlural(name.toLowerCase())+"="+entityObject+".get"+getPlural(name)+"();");
-				func.codeLines.add("if("+getPlural(name.toLowerCase())+"==null)");
-						func.codeLines.add(getPlural(name.toLowerCase())+"=new ArrayList<"+name+">();");
-				func.codeLines.add(getPlural(name.toLowerCase())+".add("+name.toLowerCase()+"_tmp);");
-				func.codeLines.add(entityObject+".set"+getPlural(name)+"("+getPlural(name.toLowerCase())+");");
+				func.codeLines.add("List<"+name+"> "+getPlural(CommonUtils.toLowerFirst(name))+"="+entityObject+".get"+getPlural(name)+"();");
+				func.codeLines.add("if("+getPlural(CommonUtils.toLowerFirst(name))+"==null)");
+						func.codeLines.add(getPlural(CommonUtils.toLowerFirst(name))+"=new ArrayList<"+name+">();");
+				func.codeLines.add(getPlural(CommonUtils.toLowerFirst(name))+".add("+CommonUtils.toLowerFirst(name)+"_tmp);");
+				func.codeLines.add(entityObject+".set"+getPlural(name)+"("+getPlural(CommonUtils.toLowerFirst(name))+");");
 			}else
-				func.codeLines.add(entityObject + ".set" + name + "(" + name.toLowerCase() + "_tmp);");
+				func.codeLines.add(entityObject + ".set" + name + "(" + CommonUtils.toLowerFirst(name) + "_tmp);");
 			if (paramArray != null)
 				for (String param : paramArray)
 					if (!param.equals(name)) {
-						prop = clazz.addProperty("private ", param + "Repository ", param.toLowerCase() + "Repo",
+						prop = clazz.addProperty("private ", param + "Repository ", CommonUtils.toLowerFirst(param) + "Repo",
 								false);
 						System.out.println("+++++++++++++++++++++++++"+clazz.getName()+" and "+param+" entity: "+entity);
 						//clazz=addPatchMapping(clazz, param);
 						prop.annotations.add("@Autowired");
-						func.addParam("@RequestParam", "long", param.toLowerCase() + "Id");
-						func.codeLines.add("Optional<" + param + "> " + param.toLowerCase() + "=" + param.toLowerCase()
-								+ "Repo.findById(" + param.toLowerCase() + "Id" + ");");
-						func.codeLines.add(param + " " + param.toLowerCase() + "_tmp=null;");
-						func.codeLines.add("if(" + param.toLowerCase() + ".isPresent()) " + param.toLowerCase()
-								+ "_tmp=" + param.toLowerCase() + ".get();\r\nelse\r\n");
+						func.addParam("@RequestParam", "long", CommonUtils.toLowerFirst(param) + "Id");
+						func.codeLines.add("Optional<" + param + "> " + CommonUtils.toLowerFirst(param) + "=" + CommonUtils.toLowerFirst(param)
+								+ "Repo.findById(" + CommonUtils.toLowerFirst(param) + "Id" + ");");
+						func.codeLines.add(param + " " + CommonUtils.toLowerFirst(param) + "_tmp=null;");
+						func.codeLines.add("if(" + CommonUtils.toLowerFirst(param) + ".isPresent()) " + CommonUtils.toLowerFirst(param)
+								+ "_tmp=" + CommonUtils.toLowerFirst(param) + ".get();\r\nelse\r\n");
 						func.codeLines.add("throw new Exception(\"" + param + " not found\");\r\n");
-						mtmRel=getPlural((param.toLowerCase()));
+						mtmRel=getPlural((CommonUtils.toLowerFirst(param)));
 						if(classes.get(entity).getProperty(mtmRel)!=null) {
-							func.codeLines.add("List<"+param+"> "+getPlural(param.toLowerCase())+"="+entityObject+".get"+getPlural(param)+"();");
-							func.codeLines.add("if("+getPlural(param.toLowerCase())+"==null)");
-									func.codeLines.add(getPlural(param.toLowerCase())+"=new ArrayList<"+param+">();");
-							func.codeLines.add(getPlural(param.toLowerCase())+".add("+param.toLowerCase()+"_tmp);");
-							func.codeLines.add(entityObject+".set"+getPlural(param)+"("+getPlural(param.toLowerCase())+");");
+							func.codeLines.add("List<"+param+"> "+getPlural(CommonUtils.toLowerFirst(param))+"="+entityObject+".get"+getPlural(param)+"();");
+							func.codeLines.add("if("+getPlural(CommonUtils.toLowerFirst(param))+"==null)");
+									func.codeLines.add(getPlural(CommonUtils.toLowerFirst(param))+"=new ArrayList<"+param+">();");
+							func.codeLines.add(getPlural(CommonUtils.toLowerFirst(param))+".add("+CommonUtils.toLowerFirst(param)+"_tmp);");
+							func.codeLines.add(entityObject+".set"+getPlural(param)+"("+getPlural(CommonUtils.toLowerFirst(param))+");");
 						}else {
-							func.codeLines.add(entityObject + ".set" + param + "(" + param.toLowerCase() + "_tmp);");
+							func.codeLines.add(entityObject + ".set" + param + "(" + CommonUtils.toLowerFirst(param) + "_tmp);");
 						}
 					}
 
@@ -573,21 +574,21 @@ public class CodeGen {
 	private void verifyAndResolveRelations(ClassMetaData entity, String rel) {
 		ClassMetaData otm=classes.get(rel);
 		System.out.println("Adding Relation to: "+rel+" in "+entity.getName());
-		Property otmProp=otm.getProperty(getPlural(entity.getName().toLowerCase()));
+		Property otmProp=otm.getProperty(getPlural(CommonUtils.toLowerFirst(entity.getName())));
 		if(otmProp==null)
 			return;
 		System.out.println("Fixing: "+entity.getName() +" ManyToMany "+rel);
 		if(otmProp.removeAnnotation("@OneToMany")) {
 			System.out.println("OneToMany removed from: "+rel);
-			otmProp.annotations.add("@ManyToMany(mappedBy = \""+getPlural(otm.getName().toLowerCase())+"\")");
+			otmProp.annotations.add("@ManyToMany(mappedBy = \""+getPlural(CommonUtils.toLowerFirst(otm.getName()))+"\")");
 			otm.addImport("import javax.persistence.ManyToMany;");
-			Property entityMtM=entity.getProperty(getPlural(rel.toLowerCase()));
+			Property entityMtM=entity.getProperty(getPlural(CommonUtils.toLowerFirst(rel)));
 			if(entityMtM.removeAnnotation("@OneToMany")){
 				System.out.println("OneToOne Removed from: "+entity.getName());
 				entityMtM.annotations.add("@ManyToMany(cascade = CascadeType.ALL)");
-				String mtmRel="@JoinTable(name = \""+entity.getName().toLowerCase()+"_"+otm.getName().toLowerCase()+"\", \r\n" + 
-						"      joinColumns = @JoinColumn(name = \""+entity.getName().toLowerCase()+"_id\", referencedColumnName = \"id\"), \r\n" + 
-						"      inverseJoinColumns = @JoinColumn(name = \""+otm.getName().toLowerCase()+"_id\", \r\n" + 
+				String mtmRel="@JoinTable(name = \""+CommonUtils.toLowerFirst(entity.getName())+"_"+CommonUtils.toLowerFirst(otm.getName())+"\", \r\n" + 
+						"      joinColumns = @JoinColumn(name = \""+CommonUtils.toLowerFirst(entity.getName())+"_id\", referencedColumnName = \"id\"), \r\n" + 
+						"      inverseJoinColumns = @JoinColumn(name = \""+CommonUtils.toLowerFirst(otm.getName())+"_id\", \r\n" + 
 						"      referencedColumnName = \"id\"))";
 				entityMtM.annotations.add(mtmRel);
 				entity.addImport("import javax.persistence.CascadeType;");
@@ -612,16 +613,16 @@ public class CodeGen {
 				String name=property.type.replace("List<", "").replace(">", "");
 				if(property.type.contains("List<")) {
 					func.codeLines.add("linkTo=WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn("+resource+").get"+getPlural(name)+"(id));");
-					func.codeLines.add("add(Link.of(linkTo.toUriComponentsBuilder().buildAndExpand(id).toString(),\""+getPlural(name.toLowerCase())+"\"));");
+					func.codeLines.add("add(Link.of(linkTo.toUriComponentsBuilder().buildAndExpand(id).toString(),\""+getPlural(CommonUtils.toLowerFirst(name))+"\"));");
 					//add(Link.of(linkTo.toUriComponentsBuilder().buildAndExpand(id).toString(),"timesheet-details"));
 				}else {
 					func.codeLines.add("linkTo = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn("+resource+").get"+(name)+"(id));");
-					func.codeLines.add("add(Link.of(linkTo.toUriComponentsBuilder().buildAndExpand(id).toString(),\""+name.toLowerCase()+"\"));");
+					func.codeLines.add("add(Link.of(linkTo.toUriComponentsBuilder().buildAndExpand(id).toString(),\""+CommonUtils.toLowerFirst(name)+"\"));");
 				}
 			}
 		}
 		func.codeLines.add("linkTo = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn("+resource+").get"+getPlural(entity.getName())+"());");
-		func.codeLines.add("add(Link.of(linkTo.toUriComponentsBuilder().path(\"/{id}\").buildAndExpand(id).toString(),\""+getPlural(entity.getName().toLowerCase())+"\"));");
+		func.codeLines.add("add(Link.of(linkTo.toUriComponentsBuilder().path(\"/{id}\").buildAndExpand(id).toString(),\""+getPlural(CommonUtils.toLowerFirst(entity.getName()))+"\"));");
 		func.codeLines.add("}catch(Exception e){}");
 	}
 
@@ -682,7 +683,7 @@ public class CodeGen {
 				if(payload.getProperty("requestpayload").required)
 					requestBody="@RequestBody(required = true)";
 				
-				Function apiActionImpl=resource.addFunction("public", "ResponsePayload", clazz.getName().toLowerCase());
+				Function apiActionImpl=resource.addFunction("public", "ResponsePayload", CommonUtils.toLowerFirst(clazz.getName()));
 				
 				
 				apiActionImpl.addParam(requestBody,"RequestPayload" , "requestPayload");

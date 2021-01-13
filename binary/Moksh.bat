@@ -1,0 +1,1 @@
+java -cp Moksh.jar com.github.moksh.generator.GUI.JSchemaGeneratorGUI

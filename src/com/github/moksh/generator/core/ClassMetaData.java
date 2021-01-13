@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.moksh.generator.GUI.Utils.CommonUtils;
+
 public class ClassMetaData {
 
 	public String getName() {
@@ -415,14 +417,14 @@ public class ClassMetaData {
 		dirPath=dirPath.split("java")[0]+"resources/static/admin-ui/";
 		String data=nav;
 		if("entity".equalsIgnoreCase(getModelType())) {
-				data=nav.replace("%"+getName()+"listUrl%", "http://localhost:8080/"+CodeGen.getPlural(getName().toLowerCase()))
-				.replace("%"+getName()+"editUrl%", "http://localhost:8080/"+CodeGen.getPlural(getName().toLowerCase())+"/");//.replace("%navigation%", navigation);
+				data=nav.replace("%"+getName()+"listUrl%", "http://localhost:8080/"+CodeGen.getPlural(CommonUtils.toLowerFirst(getName())))
+				.replace("%"+getName()+"editUrl%", "http://localhost:8080/"+CodeGen.getPlural(CommonUtils.toLowerFirst(getName()))+"/");//.replace("%navigation%", navigation);
 //			File file=new File(dirPath);
 //			if(!file.exists() || !file.isDirectory()) {
 //				file.mkdir();
 //			}
 //			FileOutputStream fos = new FileOutputStream(
-//					new File(dirPath + getName().toLowerCase() + ".html"));
+//					new File(dirPath + CommonUtils.toLowerFirst(getName()) + ".html"));
 //			fos.write(data.getBytes());
 //			fos.flush();
 //			fos.close();
@@ -580,7 +582,7 @@ public class ClassMetaData {
 					append("},");
 				}else {
 					appendln("\""+prop.name+"\":{");
-					appendln("\"type\" : \""+prop.type.toLowerCase()+"\"");
+					appendln("\"type\" : \""+CommonUtils.toLowerFirst(prop.type)+"\"");
 					append("},");
 				}
 			}else {

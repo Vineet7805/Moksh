@@ -54,6 +54,7 @@ import org.jsonschema2pojo.SchemaMapper;
 import org.jsonschema2pojo.SchemaStore;
 import org.jsonschema2pojo.rules.RuleFactory;
 
+import com.github.moksh.generator.GUI.Utils.CommonUtils;
 import com.github.moksh.generator.core.ClassMetaData;
 import com.github.moksh.generator.core.ClassMetaData.API;
 import com.github.moksh.generator.core.ClassMetaData.Property;
@@ -823,14 +824,11 @@ editor.grabHorizontal = true;
 	          
 	          if(colInd==typeIndex) {
 		          Combo typeCombo = new Combo(tree, SWT.READ_ONLY);
-		          if(item.getText(colIndex).toLowerCase().contains("api")) {
-		        	  typeCombo.setItems(new String[] {"API<GET>", "API<POST>", "API<PUT>", "API<DELETE>", "API<PATCH>", "object"});
-		          }else
-		          if(item.getText(colIndex).toLowerCase().contains("array")) {
+		          if(item.getText(colIndex).toLowerCase().contains("array") && item.getItemCount()==0) {
 		        	  typeCombo.setItems(new String[] {"array<string>", "array<number>", "array<boolean>", "array<integer>", "array<object>", "object"});
 		          }else
 		          if(item.getItemCount()==0)
-		        	  typeCombo.setItems(new String[] {"string", "number", "boolean", "integer", "object", "array<object>", "API<GET>"});
+		        	  typeCombo.setItems(new String[] {"string", "number", "boolean", "integer", "object", "array<object>"});
 		          else
 		        	  typeCombo.setItems(new String[] {"object", "array<object>"});
 		  		  //final Text text = new Text(tree, SWT.NONE);
@@ -1022,7 +1020,7 @@ editor.grabHorizontal = true;
 
 				cls.addImport("import com.fasterxml.jackson.annotation.JsonIgnore;");
 				cls.addImport("import org.springframework.data.rest.core.annotation.Description;");
-				Property prop=cls.addProperty("private",clsName, clsName.toLowerCase(),false);
+				Property prop=cls.addProperty("private",clsName, CommonUtils.toLowerFirst(clsName),false);
 				if(!"local".equalsIgnoreCase(cls.getScope())) {
 					cls.addImport("import javax.persistence.CascadeType;");
 					cls.addImport("import javax.persistence.JoinColumn;");
@@ -1097,10 +1095,10 @@ editor.grabHorizontal = true;
 					cls.addImport("import java.util.List;");
 					cls.addImport("import com.fasterxml.jackson.annotation.JsonIgnore;");
 					
-					Property prop=cls.addProperty("private","List<"+clsName+">", CodeGen.getPlural(clsName.toLowerCase()),false);
+					Property prop=cls.addProperty("private","List<"+clsName+">", CodeGen.getPlural(CommonUtils.toLowerFirst(clsName)),false);
 					if(!"local".equalsIgnoreCase(cls.getScope())) {
 						prop.annotations.add("@JsonIgnore");
-						prop.annotations.add("@OneToMany(mappedBy = \""+cls.getName().toLowerCase()+"\")");
+						prop.annotations.add("@OneToMany(mappedBy = \""+CommonUtils.toLowerFirst(cls.getName())+"\")");
 					}
 					if("true".equals(item.getText(requiredIndex))) {
 							prop.required=true;

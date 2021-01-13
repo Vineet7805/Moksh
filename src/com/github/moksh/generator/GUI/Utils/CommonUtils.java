@@ -1096,7 +1096,17 @@ public class CommonUtils {
 		return xPathValues;
 	}
 	
-public static void main(String[] args) throws Exception{
+	public static String toLowerFirst(String word) {
+		word=word.substring(0, 1).toLowerCase()+word.substring(1,word.length());
+		return word;
+	}
+	
+	public static String toUpperFirst(String word) {
+		word=word.substring(0, 1).toUpperCase()+word.substring(1,word.length());
+		return word;
+	}
+	
+public static void main1(String[] args) throws Exception{
 	String json="{\"meta\": {\r\n" + 
 			"    \"pagination\": {\r\n" + 
 			"      \"total\": 858,\r\n" + 
@@ -1113,11 +1123,7 @@ public static void main(String[] args) throws Exception{
     engine.eval("if(2==2)throw new Error(\"Error reported from ssdsdssdsd inside script\");");
 	//System.out.println(evaluateCondition(condition, jn,engine));
 }
-public static void main1(String[] args) {
-	for(int i=0;i<20;i++) {
-		if(i>10)
-			continue;
-		System.out.println(i);
-	}
+public static void main(String[] args) {
+	System.out.println(toLowerFirst("AccessPrivilages"));
 }
 }
