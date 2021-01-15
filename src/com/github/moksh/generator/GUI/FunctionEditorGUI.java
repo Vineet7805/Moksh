@@ -1038,17 +1038,24 @@ public class FunctionEditorGUI extends Composite {
 		System.out.println("You chose to open this file: " + filePath);
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode nodeL = mapper.readTree(new File(filePath));
-		((ObjectNode) nodeL.get("properties").get("Headers").get("properties")).remove("ResponseHeaders");
-		((ObjectNode) nodeL.get("properties")).remove("Parameter");
+		if(!nodeL.at("/properties/Headers/properties/ResponseHeaders").isMissingNode())
+			((ObjectNode) nodeL.get("properties").get("Headers").get("properties")).remove("ResponseHeaders");
+		if(!nodeL.at("/properties/Parameter").isMissingNode())
+			((ObjectNode) nodeL.get("properties")).remove("Parameter");
 		JsonNode leftNode = ((ObjectNode) nodeL.get("properties").get("Payload").get("properties"));// ;
 
-		((ObjectNode) leftNode).remove("ResponsePayload");
+		if(leftNode.get("ResponsePayload")!=null)
+			((ObjectNode) leftNode).remove("ResponsePayload");
 
 		JsonNode nodeR = mapper.readTree(new File(filePath));
-		((ObjectNode) nodeR.get("properties").get("Headers").get("properties")).remove("RequestHeaders");
-		((ObjectNode) nodeR.get("properties")).remove("Parameter");
+		if(!nodeR.at("/properties/Headers/properties/RequestHeaders").isMissingNode())
+			((ObjectNode) nodeR.get("properties").get("Headers").get("properties")).remove("RequestHeaders");
+		if(!nodeR.at("/properties/Parameter").isMissingNode())
+			((ObjectNode) nodeR.get("properties")).remove("Parameter");
 		JsonNode rightNode = ((ObjectNode) nodeR.get("properties").get("Payload").get("properties"));// .remove("RequestPayload");//node.at("/Payload/RequestPayload");
-		((ObjectNode) rightNode).remove("RequestPayload");
+		if(rightNode.get("RequestPayload")!=null)
+			((ObjectNode) rightNode).remove("RequestPayload");
+		
 		leftJsonSchema.setText(nodeL.toPrettyString());
 
 		String[] text = importJsonLeft.generatePayload(leftJsonSchema.getText());
@@ -1172,26 +1179,30 @@ public class FunctionEditorGUI extends Composite {
 		try {
 			API api = service.getAPI();
 			String versionWithoutSpecialChars=(api.version.replaceAll("[^a-zA-Z0-9]", ""));
-			String dirPath = openFolderDialog();
+			String filename=api.packageName + ".JSON";
+			String dirPath = CommonUtils.saveFileDialog(getShell(), filename);//(getShell());
+			
 			if(dirPath==null)
 				return;
+			dirPath=dirPath.replace("/"+filename, "").replace("\\"+filename, "");
+			System.out.println(dirPath);
 			if (!dirPath.replaceAll("[^a-zA-Z0-9]", "").contains(api.packageName.replaceAll("[^a-zA-Z0-9]", ""))) {
 				throw new Exception("Directory path should match package name '" + api.packageName + "'."
 						+ "\nPackage path:\n" + api.packageName + "\nFolder Path:\n" + dirPath);
 			}
 			if(!dirPath.endsWith(versionWithoutSpecialChars)) {
 				dirPath += "/" + versionWithoutSpecialChars;
-				if (new File(dirPath).exists()) {
-					String val = new PromptDialogBox(getShell(), getStyle())
-							.open("Version(" + api.version + ") already exists. Overwrite existing version?");
-					if (val == null)
-						return;
-				}
+			}
+			if (new File(dirPath).exists()) {
+				String val = new PromptDialogBox(getShell(), getStyle())
+						.open("Version(" + api.version + ") already exists. \nOverwrite existing version?");
+				if (val == null)
+					return;
 			}
 
 			service.exportAPI(dirPath, api.packageName + "." + versionWithoutSpecialChars, classes);
 			ClassMetaData resource = classes.get(service.getName() + "Resource");
-			resource.exportJava(dirPath, api.packageName + api.version.replaceAll("[^a-zA-Z0-9]", ""));
+			resource.exportJava(dirPath, api.packageName + "."+api.version.replaceAll("[^a-zA-Z0-9]", ""));
 			File dir = new File(dirPath);
 			if (!dir.exists())
 				dir.mkdirs();
@@ -1219,25 +1230,28 @@ public class FunctionEditorGUI extends Composite {
 		ClassMetaData payload = classes.get(clazz.getName() + ".Payload");
 		String requestBody = "@RequestBody(required = false)";
 		Function apiActionImpl = null;
-		Function functionJsonWrapper = null;
+//		Function functionJsonWrapper = null;
 		if ((payload.getProperty("requestpayloads") != null && payload.getProperty("requestpayloads").required)
 				|| (payload.getProperty("requestpayload") != null && payload.getProperty("requestpayload").required))
 			requestBody = "@RequestBody(required = true)";
 		if (payload.getProperty("responsepayload") != null) {
 			apiActionImpl = resource.addFunction("public", "ResponsePayload", clazz.getName().toLowerCase());
-			functionJsonWrapper = resource.addFunction("public", "String", clazz.getName().toLowerCase() + "Wrapper");
+//			functionJsonWrapper = resource.addFunction("public", "String", clazz.getName().toLowerCase() + "Wrapper");
 		} else {
 			apiActionImpl = resource.addFunction("public", "List<ResponsePayload>",
 					clazz.getName().toLowerCase() + "s");
-			functionJsonWrapper = resource.addFunction("public", "String", clazz.getName().toLowerCase() + "s");
+//			functionJsonWrapper = resource.addFunction("public", "String", clazz.getName().toLowerCase() + "s");
 		}
-		functionJsonWrapper.addParam("", "String", "jsonPayload");
-		functionJsonWrapper.exceptions.add("Exception");
+//		functionJsonWrapper.addParam("", "String", "jsonPayload");
+//		functionJsonWrapper.exceptions.add("Exception");
 
-		if (payload.getProperty("requestpayload") != null)
-			apiActionImpl.addParam(requestBody, "RequestPayload", "requestPayload");
+		if (payload.getProperty("requestpayload") != null) {
+			
+		if(payload.getProperty("requestpayload").type.startsWith("List<"))
+			apiActionImpl.addParam(requestBody, "List<RequestPayload>", "requestPayload");
 		else
-			apiActionImpl.addParam(requestBody, "List<RequestPayload>", "requestPayloads");
+			apiActionImpl.addParam(requestBody, "RequestPayload", "requestPayload");
+		}
 		String method = api.method.toLowerCase();
 		method = method.substring(0, 1).toUpperCase() + method.substring(1);// making first alphabet capital and others
 																			// small
@@ -1279,12 +1293,12 @@ public class FunctionEditorGUI extends Composite {
 		if (params.trim().length() > 0)
 			params = (params + ",").replace(",,", "");
 
-		functionJsonWrapper.codeLines.add("ObjectMapper om=new ObjectMapper();");
-		functionJsonWrapper.codeLines.add("om.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);");
-		functionJsonWrapper.codeLines
-				.add("RequestPayload req=om.readValue(jsonPayload.getBytes(), RequestPayload.class);");
-		functionJsonWrapper.codeLines.add("String ret=om.writeValueAsString(" + apiActionImpl.name + "(req));");
-		functionJsonWrapper.codeLines.add("return ret;");
+//		functionJsonWrapper.codeLines.add("ObjectMapper om=new ObjectMapper();");
+//		functionJsonWrapper.codeLines.add("om.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);");
+//		functionJsonWrapper.codeLines
+//				.add("RequestPayload req=om.readValue(jsonPayload.getBytes(), RequestPayload.class);");
+//		functionJsonWrapper.codeLines.add("String ret=om.writeValueAsString(" + apiActionImpl.name + "(req));");
+//		functionJsonWrapper.codeLines.add("return ret;");
 		resource.addImport("import com.fasterxml.jackson.databind.ObjectMapper;");
 		resource.addImport("import com.fasterxml.jackson.databind.MapperFeature;");
 
@@ -1297,16 +1311,13 @@ public class FunctionEditorGUI extends Composite {
 		lblOperationSig.setText(apiActionImpl.toString());//.replace("{", "").replace("}", ""));
 	}
 
-	private String openFolderDialog() throws Exception {
+/*	private String openFolderDialog() throws Exception {
 		DirectoryDialog fd = new DirectoryDialog(this.getShell(), SWT.OPEN);
 		fd.setText("Open");
-		/*
-		 * String lastPath = System.getInstance().getString(Config.LAST_OPEN_TEXT_PATH);
-		 * if (lastPath != null && !lastPath.isEmpty()) fd.setFileName(lastPath);
-		 */
+
 		String selected = fd.open();
 		return selected;
-	}
+	}*/
 
 	private ClassMetaData createRoot(String name, TreeItem[] requestDoc, TreeItem[] responseDoc, TreeItem paramDoc[])
 			throws Exception {

@@ -280,7 +280,7 @@ public class CodeGen {
 			addRel.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
 			
 			String getValFuncName=CommonUtils.toUpperFirst(uniqueProperty.name);//.substring(0, 1).toUpperCase()+uniqueProperty.name.substring(1).toLowerCase();
-			addRel.codeLines.add("TypedQuery<"+entity+"> "+entityObject+"_q2 = entityManager.createQuery(\"SELECT obj FROM "+entity+" obj where obj."+uniqueProperty.name+"='\"+"+entityObject+".get"+getValFuncName+"()+\"'\", "+entity+".class);");
+			addRel.codeLines.add("TypedQuery<"+entity+"> "+entityObject+"_q2 = entityManager.createQuery(\"SELECT obj FROM "+entity+" obj where obj."+uniqueProperty.name+"='\"+"+entityObject+CommonUtils.resolveGetter(uniqueProperty)+getValFuncName+"()+\"'\", "+entity+".class);");
 			addRel.codeLines.add("List<"+entity+"> "+entityObject+"_rel= "+entityObject+"_q2.getResultList();");
 			addRel.codeLines.add("if("+entityObject+"_rel!=null && "+entityObject+"_rel.size()>0) {");
 			addRel.codeLines.add(entityObject+"_rel.get(0);");
@@ -333,7 +333,7 @@ public class CodeGen {
 				String propName=property.name;
 				propName=propName.substring(0, 1).toUpperCase()+propName.substring(1);
 				if(!"id".equalsIgnoreCase(propName))
-					func.codeLines.add(CommonUtils.toLowerFirst(name) + "_tmp.set"+propName+"("+objectName + ".get"+propName+"()"+");");
+					func.codeLines.add(CommonUtils.toLowerFirst(name) + "_tmp.set"+propName+"("+objectName + CommonUtils.resolveGetter(property)+propName+"()"+");");
 			}
 		}
 		func.codeLines.add(objectName + "=" + objectName + "Repo.save(" +CommonUtils.toLowerFirst(name) + "_tmp);");
@@ -526,7 +526,7 @@ public class CodeGen {
 			func.codeLines.add("throw new Exception(\"" + name + " not found\");\r\n");
 			String mtmRel=getPlural((CommonUtils.toLowerFirst(name)));
 			if(classes.get(entity).getProperty(mtmRel)!=null) {
-				func.codeLines.add("List<"+name+"> "+getPlural(CommonUtils.toLowerFirst(name))+"="+entityObject+".get"+getPlural(name)+"();");
+				func.codeLines.add("List<"+name+"> "+getPlural(CommonUtils.toLowerFirst(name))+"="+entityObject+CommonUtils.resolveGetter(null)+getPlural(name)+"();");
 				func.codeLines.add("if("+getPlural(CommonUtils.toLowerFirst(name))+"==null)");
 						func.codeLines.add(getPlural(CommonUtils.toLowerFirst(name))+"=new ArrayList<"+name+">();");
 				func.codeLines.add(getPlural(CommonUtils.toLowerFirst(name))+".add("+CommonUtils.toLowerFirst(name)+"_tmp);");
@@ -550,7 +550,7 @@ public class CodeGen {
 						func.codeLines.add("throw new Exception(\"" + param + " not found\");\r\n");
 						mtmRel=getPlural((CommonUtils.toLowerFirst(param)));
 						if(classes.get(entity).getProperty(mtmRel)!=null) {
-							func.codeLines.add("List<"+param+"> "+getPlural(CommonUtils.toLowerFirst(param))+"="+entityObject+".get"+getPlural(param)+"();");
+							func.codeLines.add("List<"+param+"> "+getPlural(CommonUtils.toLowerFirst(param))+"="+entityObject+CommonUtils.resolveGetter(null)+getPlural(param)+"();");
 							func.codeLines.add("if("+getPlural(CommonUtils.toLowerFirst(param))+"==null)");
 									func.codeLines.add(getPlural(CommonUtils.toLowerFirst(param))+"=new ArrayList<"+param+">();");
 							func.codeLines.add(getPlural(CommonUtils.toLowerFirst(param))+".add("+CommonUtils.toLowerFirst(param)+"_tmp);");

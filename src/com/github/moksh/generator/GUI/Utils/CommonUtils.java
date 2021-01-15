@@ -1040,6 +1040,23 @@ public class CommonUtils {
 		return selected;
 	}
 	
+	public static String saveFileDialog(Shell shell,String filename) {
+		String selected = null;
+		try {
+			FileDialog fd = new FileDialog(shell, SWT.SAVE);
+			fd.setText("Open");
+			fd.setFileName(filename);
+			String[] filterExt = { "*.json;*.JSON" };
+			String[] filterNames = { "TXT files" };
+			fd.setFilterExtensions(filterExt);
+			fd.setFilterNames(filterNames);
+			selected = fd.open();
+		} catch (Exception e) {
+			new ErrorDialogBox(shell, shell.getStyle()).open(e);
+		}
+		return selected;
+	}
+	
 	
 	
 	public static String resolveJavaType(String typ, String format) {
@@ -1054,11 +1071,22 @@ public class CommonUtils {
 		case "integer":
 			javaType="Integer";
 			break;
+		case "boolean":
+			javaType="boolean";
+			break;
 		default:
 			System.out.println("Type conversion requested for "+typ.trim());
 			javaType="Double";
 		}
 		return javaType;
+	}
+	
+	public static String resolveGetter(Property prop) {
+		String getter=".get";
+		if(prop!=null && prop.primitive && "boolean".equalsIgnoreCase(prop.type)) {
+			getter=".is";
+		}
+		return getter;
 	}
 	
 	public static boolean evaluateCondition(String condition, JsonNode jn,ScriptEngine engine) throws Exception{
