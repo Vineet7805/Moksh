@@ -413,12 +413,15 @@ public class ClassMetaData {
 		return null;
 	}
 	
-	public String exportGUI(String dirPath, String nav) throws Exception {
+	public String exportGUI(String dirPath, String nav, String baseUrl) throws Exception {
 		dirPath=dirPath.split("java")[0]+"resources/static/admin-ui/";
+		if(baseUrl==null){
+			baseUrl="http://localhost:8080";
+		}
 		String data=nav;
 		if("entity".equalsIgnoreCase(getModelType())) {
-				data=nav.replace("%"+getName()+"listUrl%", "http://localhost:8080/"+CodeGen.getPlural(CommonUtils.toLowerFirst(getName())))
-				.replace("%"+getName()+"editUrl%", "http://localhost:8080/"+CodeGen.getPlural(CommonUtils.toLowerFirst(getName()))+"/");//.replace("%navigation%", navigation);
+				data=nav.replace("%"+getName()+"listUrl%", baseUrl+"/"+CodeGen.getPlural(CommonUtils.toLowerFirst(getName())))
+				.replace("%"+getName()+"editUrl%", baseUrl+"/"+CodeGen.getPlural(CommonUtils.toLowerFirst(getName()))+"/");//.replace("%navigation%", navigation);
 //			File file=new File(dirPath);
 //			if(!file.exists() || !file.isDirectory()) {
 //				file.mkdir();

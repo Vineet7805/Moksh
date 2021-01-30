@@ -2,8 +2,10 @@ package com.github.moksh.generator.GUI;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -84,7 +86,7 @@ public class JSchemaGeneratorGUI extends Composite {
 	 */
 	public Display display = null;
 	public Shell shell = new Shell(display);
-	int nameIndex=0,titleIndex=2,typeIndex=3,descIndex=1,egIndex=4,enumIndex=5,formatIndex=6,requiredIndex=7,scopeIndex=8,codeIndex=9,customIndex=10, importIndex=11;
+	int nameIndex=0,titleIndex=2,typeIndex=3,descIndex=1,egIndex=4,enumIndex=5,formatIndex=6,requiredIndex=7,scopeIndex=8;
 	public static void main(String[] args) {
 		final Display display = new Display();
 	
@@ -203,18 +205,6 @@ public class JSchemaGeneratorGUI extends Composite {
 		trclmnScope.setWidth(100);
 		trclmnScope.setText("Scope");
 		
-		TreeColumn trclmnCode = new TreeColumn(tree, SWT.LEFT_TO_RIGHT);
-		trclmnCode.setWidth(100);
-		trclmnCode.setText("Code");
-		
-		TreeColumn trclmnCustom = new TreeColumn(tree, SWT.LEFT_TO_RIGHT);
-		trclmnCustom.setWidth(100);
-		trclmnCustom.setText("Custom");
-		
-		TreeColumn trclmnImport = new TreeColumn(tree, SWT.LEFT_TO_RIGHT);
-		trclmnImport.setWidth(100);
-		trclmnImport.setText("Import");
-		
 		tree.setFont(treeFont);
 		tree.addListener(SWT.EraseItem, new Listener() {
 		      public void handleEvent(Event event) {
@@ -225,7 +215,6 @@ public class JSchemaGeneratorGUI extends Composite {
 		           * If you wish to paint the selection beyond the end of last column,
 		           * you must change the clipping region.
 		           */
-		          
 		          gc.setAdvanced(true);
 		          if (gc.getAdvanced())
 		            gc.setAlpha(128);
@@ -280,7 +269,10 @@ public class JSchemaGeneratorGUI extends Composite {
 					fos.write(jsonWorkspace.getBytes());
 					fos.flush();
 					fos.close();
-					String val=CG.generateClasses(basePackage.getText().toString(),folderLoc, htmlText.getText(), javaScriptText.getText(), cssText.getText());
+					Properties prop=new Properties();
+					prop.load(new StringReader(applicationText.getText()));
+					String baseUrl=prop.getProperty("moksh.admin-ui.baseUrl");
+					String val=CG.generateClasses(basePackage.getText().toString(),folderLoc, htmlText.getText(), javaScriptText.getText(), cssText.getText(),baseUrl);
 					if(val!=null)
 						new InfoDialogBox(shell, style).open(val);
 				} catch (Exception e1) {
@@ -342,23 +334,11 @@ public class JSchemaGeneratorGUI extends Composite {
 						item.setText(enumIndex, "");
 						item.setText(requiredIndex, "");
 						item.setText(scopeIndex, "Persist");
-						item.setText(codeIndex, "");
+						//item.setText(codeIndex, "");
 					}else {
 						final TreeItem selItem = tree.getSelection()[0];
 						String type=selItem.getText(typeIndex);
 						
-						if(type.equalsIgnoreCase("API<GET>") || type.equalsIgnoreCase("API<POST>") || type.equalsIgnoreCase("API<DELETE>") || type.equalsIgnoreCase("API<PUT>") || type.equalsIgnoreCase("API<PATCH>") ||  type.equalsIgnoreCase("API")) {
-							TreeItem item = new TreeItem(selItem, SWT.FULL_SELECTION);
-							item.setText(nameIndex, "newElement");
-							item.setText(descIndex, "");
-							item.setText(titleIndex, "");
-							item.setText(typeIndex, "string");
-							item.setText(egIndex, "");
-							item.setText(enumIndex, "");
-							item.setText(requiredIndex, "true");
-							item.setText(scopeIndex, "Local");
-							item.setText(codeIndex, "Code Editor");
-						}else
 						if(type.equalsIgnoreCase("array<object>") || type.equalsIgnoreCase("array<array>") ||  type.equalsIgnoreCase("object")) {
 							TreeItem item = new TreeItem(selItem, SWT.FULL_SELECTION);
 							item.setText(nameIndex, "newElement");
@@ -369,7 +349,7 @@ public class JSchemaGeneratorGUI extends Composite {
 							item.setText(enumIndex, "");
 							item.setText(requiredIndex, "true");
 							item.setText(scopeIndex, "Persist");
-							item.setText(codeIndex, "");
+							//item.setText(codeIndex, "");
 						}else {
 							TreeItem item = null;
 							if(selItem.getParentItem()!=null)
@@ -384,7 +364,7 @@ public class JSchemaGeneratorGUI extends Composite {
 							item.setText(enumIndex, "");
 							item.setText(requiredIndex, "true");
 							item.setText(scopeIndex, "");
-							item.setText(codeIndex, "");
+							//item.setText(codeIndex, "");
 						}
 					}
 				} catch (Exception e2) {
@@ -571,10 +551,10 @@ public class JSchemaGeneratorGUI extends Composite {
 		composite_3.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
 		pomText = new Text(composite_3, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
-		pomText.setText("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\r\n\t<modelVersion>4.0.0</modelVersion>\r\n\t<parent>\r\n\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t<artifactId>spring-boot-starter-parent</artifactId>\r\n\t\t<version>2.4.0</version>\r\n\t\t<relativePath/> <!-- lookup parent from repository -->\r\n\t</parent>\r\n\t<groupId>com.lm</groupId>\r\n\t<artifactId>timesheet</artifactId>\r\n\t<version>0.0.1-SNAPSHOT</version>\r\n\t<name>timesheet</name>\r\n\t<description>Timesheet</description>\r\n\r\n\t<properties>\r\n\t\t<java.version>1.8</java.version>\r\n\t\t<mariadb-version>2.7.0</mariadb-version>\r\n\t</properties>\r\n\r\n\t<dependencies>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-starter-data-jpa</artifactId>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-starter-web</artifactId>\r\n\t\t</dependency>\r\n\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-starter-test</artifactId>\r\n\t\t\t<scope>test</scope>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-devtools</artifactId>\r\n\t\t\t<scope>runtime</scope>\r\n\t\t\t<optional>true</optional>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.mariadb.jdbc</groupId>\r\n\t\t\t<artifactId>mariadb-java-client</artifactId>\r\n\t\t\t<version>${mariadb-version}</version><!--$NO-MVN-MAN-VER$ -->\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springdoc</groupId>\r\n\t\t\t<artifactId>springdoc-openapi-ui</artifactId>\r\n\t\t\t<version>1.5.0</version>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springdoc</groupId>\r\n\t\t\t<artifactId>springdoc-openapi-data-rest</artifactId>\r\n\t\t\t<version>1.5.0</version>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.projectlombok</groupId>\r\n\t\t\t<artifactId>lombok</artifactId>\r\n\t\t\t<version>1.18.8</version>\r\n\t\t\t<scope>provided</scope>\r\n\t\t</dependency>\r\n\r\n\t\t<!-- https://mvnrepository.com/artifact/org.json/json -->\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.json</groupId>\r\n\t\t\t<artifactId>json</artifactId>\r\n\t\t\t<version>20201115</version>\r\n\t\t</dependency>\r\n\r\n\r\n\t\t<dependency>\r\n\t\t\t<groupId>com.integralblue</groupId>\r\n\t\t\t<artifactId>log4jdbc-spring-boot-starter</artifactId>\r\n\t\t\t<version>2.0.0</version>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-starter-hateoas</artifactId>\r\n\t\t</dependency>\r\n\t</dependencies>\r\n\r\n\t<build>\r\n\t\t<plugins>\r\n\t\t\t<plugin>\r\n\t\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t\t<artifactId>spring-boot-maven-plugin</artifactId>\r\n\t\t\t</plugin>\r\n\t\t</plugins>\r\n\t</build>\r\n\r\n</project>\r\n");
+		pomText.setText("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\r\n\t<modelVersion>4.0.0</modelVersion>\r\n\t<parent>\r\n\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t<artifactId>spring-boot-starter-parent</artifactId>\r\n\t\t<version>2.4.0</version>\r\n\t\t<relativePath/> <!-- lookup parent from repository -->\r\n\t</parent>\r\n\t<groupId>com.lm</groupId>\r\n\t<artifactId>timesheet</artifactId>\r\n\t<version>0.0.1-SNAPSHOT</version>\r\n\t<name>timesheet</name>\r\n\t<description>Timesheet</description>\r\n\r\n\t<properties>\r\n\t\t<java.version>1.8</java.version>\r\n\t\t<mariadb-version>2.7.0</mariadb-version>\r\n\t</properties>\r\n\r\n\t<dependencies>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-starter-data-jpa</artifactId>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-starter-web</artifactId>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>mysql</groupId>\r\n\t\t\t<artifactId>mysql-connector-java</artifactId>\r\n\t\t\t<version>8.0.22</version>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-starter-test</artifactId>\r\n\t\t\t<scope>test</scope>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-devtools</artifactId>\r\n\t\t\t<scope>runtime</scope>\r\n\t\t\t<optional>true</optional>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.mariadb.jdbc</groupId>\r\n\t\t\t<artifactId>mariadb-java-client</artifactId>\r\n\t\t\t<version>${mariadb-version}</version><!--$NO-MVN-MAN-VER$ -->\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springdoc</groupId>\r\n\t\t\t<artifactId>springdoc-openapi-ui</artifactId>\r\n\t\t\t<version>1.5.0</version>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springdoc</groupId>\r\n\t\t\t<artifactId>springdoc-openapi-data-rest</artifactId>\r\n\t\t\t<version>1.5.0</version>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.projectlombok</groupId>\r\n\t\t\t<artifactId>lombok</artifactId>\r\n\t\t\t<version>1.18.8</version>\r\n\t\t\t<scope>provided</scope>\r\n\t\t</dependency>\r\n\r\n\t\t<!-- https://mvnrepository.com/artifact/org.json/json -->\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.json</groupId>\r\n\t\t\t<artifactId>json</artifactId>\r\n\t\t\t<version>20201115</version>\r\n\t\t</dependency>\r\n\r\n\r\n\t\t<dependency>\r\n\t\t\t<groupId>com.integralblue</groupId>\r\n\t\t\t<artifactId>log4jdbc-spring-boot-starter</artifactId>\r\n\t\t\t<version>2.0.0</version>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t<artifactId>spring-boot-starter-hateoas</artifactId>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n   \t\t\t <groupId>org.springframework.boot</groupId>\r\n   \t\t \t <artifactId>spring-boot-starter-security</artifactId>\r\n\t\t</dependency>\r\n\t</dependencies>\r\n\r\n\t<build>\r\n\t\t<plugins>\r\n\t\t\t<plugin>\r\n\t\t\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t\t\t<artifactId>spring-boot-maven-plugin</artifactId>\r\n\t\t\t</plugin>\r\n\t\t</plugins>\r\n\t</build>\r\n\r\n</project>\r\n");
 		
 		applicationText = new Text(composite_3, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
-		applicationText.setText("#MySQL\r\nspring.datasource.url=jdbc:mariadb://localhost:3306/lm_timesheet\r\nspring.datasource.username=dev\r\nspring.datasource.password=manage\r\nspring.datasource.driver-class-name=org.mariadb.jdbc.Driver\r\nspring.jpa.database-platform=org.hibernate.dialect.MySQL5InnoDBDialect\r\nlogging.level.org.springframework=debug\r\n#JPA\r\nspring.jpa.hibernate.ddl-auto = update\r\n#Jackson\r\nspring.jackson.serialization.write-dates-as-timestamps=false");
+		applicationText.setText("#MySQL\r\nspring.datasource.url=jdbc:mysql://localhost:3306/moksh_demo\r\nspring.datasource.username=dev\r\nspring.datasource.password=manage\r\nspring.datasource.driver-class-name=com.mysql.jdbc.Driver\r\nspring.jpa.database-platform=org.hibernate.dialect.MySQL5InnoDBDialect\r\nlogging.level.org.springframework=debug\r\n#JPA\r\nspring.jpa.hibernate.ddl-auto = update\r\n#Jackson\r\nspring.jackson.serialization.write-dates-as-timestamps=false\r\n#Swagger\r\nspringdoc.use-fqn=true\r\n#Security\r\nspring.security.user.name=moksh\r\nspring.security.user.password=moksh\r\n#Moksh\r\nmoksh.admin-ui.baseUrl=http://localhost:8080");
 		
 		TabItem autoAdminGUI = new TabItem(tabFolder, SWT.NONE);
 		autoAdminGUI.setText("Auto Admin GUI");
@@ -584,7 +564,7 @@ public class JSchemaGeneratorGUI extends Composite {
 		composite_2.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
 		htmlText = new Text(composite_2, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
-		htmlText.setText("<script src=\"DynamicTableJs.js\"></script>\r\n<link href=\"DynamicTableCss.css\" rel=\"stylesheet\" />\r\n<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css\">\r\n<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js\"></script>\r\n<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js\"></script>\r\n<div class=\"center\">\r\n    %navigation%\r\n  </div>\r\n<div class=\"container\"> \r\n    <div class=\"tables\" id=\"showData\"></div>\r\n</div>\r\n  \r\n<div class=\"modelpop\">\r\n</div>\r\n<div class=\"modal-processing\"></div> ");
+		htmlText.setText("<script src=\"DynamicTableJs.js\"></script>\r\n<link href=\"DynamicTableCss.css\" rel=\"stylesheet\" />\r\n<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css\">\r\n<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js\"></script>\r\n<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js\"></script>\r\n<div class=\"center\">\r\n    %navigation%\r\n<a href=\"logout\"><button class='button'>Logout</button></a>\r\n  </div>\r\n<div class=\"container\"> \r\n    <div class=\"tables\" id=\"showData\"></div>\r\n</div>\r\n  \r\n<div class=\"modelpop\">\r\n</div>\r\n<div class=\"modal-processing\"></div> ");
 		
 		javaScriptText = new Text(composite_2, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
 		javaScriptText.setText("function dynamic_table(url, editUrl) {\r\n\t//alert(url);\r\n\t$body = $(\"body\");\r\n\r\n\t$(document).on({\r\n\t    ajaxStart: function() { $body.addClass(\"loading\");    },\r\n\t     ajaxStop: function() { $body.removeClass(\"loading\"); }    \r\n\t});\r\n\t$(\".modelpop\").html(\"\");\r\n\t$(\"#addMore\").remove();\r\n\t$(\"#refresh-link\").remove();\r\n\t$(\"#showData\").html(\"\");\r\n    window.editUrl = editUrl\r\n    window.entityUrl = url;\r\n    $.ajax({\r\n        url: url,\r\n        data: {\r\n            format: 'json'\r\n        },\r\n        error: function () {\r\n        \t$('body').removeClass(\"loading\");\r\n            $('#info').html('<p>An error has occurred</p>');\r\n        },\r\n        dataType: 'json',\r\n        success: function (data) {\r\n        \t\r\n            // EXTRACT VALUE FOR HTML HEADER.\r\n        \t//alert(data);\r\n        \tdata=JSON.stringify(data);\r\n        \tif(!data.startsWith(\"[\")){\r\n        \t\tdata=\"[\"+data+\"]\";\r\n        \t}\r\n        \tdata=JSON.parse(data);\r\n            var col = [];\r\n            window.cols = col;\r\n            for (var i = 0; i < data.length; i++) {\r\n                for (var key in data[i]) {\r\n                    if (col.indexOf(key) === -1) {\r\n                        col.push(key);\r\n                    }\r\n                }\r\n            }\r\n            col.push(\"Actions\");\r\n            // CREATE DYNAMIC TABLE.\r\n            var table = document.createElement(\"table\");\r\n            table.setAttribute('class', 'table blueTable');\r\n            // CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE.\r\n            window.addButton=true;\r\n            var tr = table.insertRow(-1);                   // TABLE ROW.\r\n            for (var i = 0; i < col.length; i++) {\r\n                var th = document.createElement(\"th\");      // TABLE HEADER.\r\n                if(col[i]=='_links')\r\n                \twindow.addButton=false;\r\n                th.innerHTML = col[i];\r\n                tr.appendChild(th);\r\n            }\r\n \r\n            // ADD JSON DATA TO THE TABLE AS ROWS.\r\n            //window.addButton=true;\r\n            if(data[0][col[0]]>0)\r\n            for (var i = 0; i < data.length; i++) {\r\n \r\n                tr = table.insertRow(-1);\r\n \r\n                for (var j = 0; j < col.length; j++) {\r\n                \t\r\n                \tvar tabCell = tr.insertCell(-1);\r\n                \t//alert(col[j]);\r\n                \tif(col[j]=='links'){//}(data[i][col[j]]!=\"undefined\" && j<col.length-1) && data[i][col[j]]!=null && data[i][col[j]][0]=='[object Object]'){\r\n                \t\tvar links=data[i][col[j]];\r\n                \t\t\r\n                \t\t//alert(JSON.stringify(links));\r\n                \t\ttabCell.innerHTML = '| ';\r\n                \t\tfor(var l=0;l<links.length;l++)\r\n                \t\t\ttabCell.innerHTML += '<a href=\"#\" onclick=\"dynamic_table(\\'' + links[l].href + '\\',\\''+links[l].href+'/\\' )\">'+links[l].rel+'</a> | ';// | <a href=\"#\" onclick=\"deleteRecord(' +\"'\"+editUrl+ data[i].id +\"'\"+ ')\">Delete</a></td>'\r\n                \t}else if(col[j]=='_links'){//}(data[i][col[j]]!=\"undefined\" && j<col.length-1) && data[i][col[j]]!=null && data[i][col[j]][0]=='[object Object]'){\r\n                \t\tvar links=data[i][col[j]];\r\n                \t\t\r\n                \t\t//alert(JSON.stringify(links));\r\n                \t\t//links=JSON.parse(links);\r\n                \t\ttabCell.innerHTML = '| ';\r\n                \t\tfor (var key in links)\r\n                \t\t//for(var l=0;l<links.length;l++)\r\n                \t\t\ttabCell.innerHTML += '<a href=\"#\" onclick=\"dynamic_table(\\'' + links[key].href + '\\',\\''+links[key].href+'/\\' )\">'+key+'</a> | ';// | <a href=\"#\" onclick=\"deleteRecord(' +\"'\"+editUrl+ data[i].id +\"'\"+ ')\">Delete</a></td>'\r\n                \t}else\r\n\t                    tabCell.innerHTML = data[i][col[j]];\r\n                }\r\n                var d = data[i].id;\r\n\r\n                \ttabCell.innerHTML = '<a href=\"#\" onclick=\"return EditTable(' + data[i].id + ' )\">Edit</a> | <a href=\"#\" onclick=\"deleteRecord(' +\"'\"+data[i].id +\"'\"+ ')\">Delete</a></td>'\r\n            }\r\n            // FINALLY ADD THE NEWLY CREATED TABLE WITH JSON DATA TO A CONTAINER.\r\n            var divContainer = document.getElementById(\"showData\");\r\n            divContainer.innerHTML = \"\";\r\n            divContainer.appendChild(table);\r\n            //alert(window.addButton);\r\n            if(window.addButton)\r\n            \tjQuery('.tables').before('<input id=\"addMore\" type=\"submit\" onclick=\"return CreateDynamicModelPopup(' +\"'\"+editUrl +\"'\"+ ');\" class=\"addme\" value=\"Add!\"></div>');\r\n            else\r\n            \tjQuery('.tables').before('<input id=\"addMore\" type=\"submit\" onclick=\"return CreateDynamicModelPopup(' +\"'\"+editUrl +\"'\"+ ');\" class=\"addme\" value=\"Add/Modify!\"></div>');\r\n            jQuery('.tables').before('<div id=\"refresh-link\" class=\"refresh-right\"><a href=\"#\" onclick=\"dynamic_table(\\'' + window.entityUrl + '\\',\\''+window.editUrl+'\\' )\">Refresh</a></div>');\r\n            $('body').removeClass(\"loading\");\r\n        },\r\n        type: 'GET'\r\n    });\r\n};\r\n \r\n \r\nfunction CreateDynamicModelPopup(editUrl) {\r\n    var d = window.cols;\r\n    var url=editUrl;\r\n    var pageTitle = $(this).attr('pageTitle');\r\n    var pageName = $(this).attr('pageName');\r\n \r\n    var modelbodystring = \"\";\r\n    modelbodystring += '<div class=\"modal fade\" tabindex=\"-1\" role=\"dialog\">'\r\n    modelbodystring += '<div class=\"modal-dialog\">'\r\n    modelbodystring += ' <form id=\"createForm\" action=\"\" method=\"POST\"><div class=\"modal-content\">'\r\n    modelbodystring += ' <div class=\"modal-header\">'\r\n    modelbodystring += '  <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\"><span aria-hidden=\"true\">?</span></button>'\r\n    modelbodystring += '<h4 class=\"modal-title\"></h4>'\r\n    modelbodystring += ' </div>'\r\n    modelbodystring += ' <div class=\"modal-body\">'\r\n    $.each(d, function (i, v) {\r\n        if (i !== 0 && !(v=='Actions' || v=='links' || v=='_links')) {\r\n            modelbodystring += '<div class=\"col-sm-12 modeldata\">'\r\n            modelbodystring += '<div class=\"col-sm-3\">'\r\n            modelbodystring += '<label>' + v + '</label>'\r\n            modelbodystring += '</div>'\r\n            modelbodystring += '<div class=\"col-sm-9\">'\r\n            if(v=='date')\r\n            \tmodelbodystring += '<input class=\"form-control\" type=\"date\" name=' + v + ' id=' + v + ' value=\"\"/>'\r\n            else\r\n            \tmodelbodystring += '<input class=\"form-control\" type=\"text\" name=' + v + ' id=' + v + ' value=\"\"/>'\r\n            modelbodystring += '</textarea >'\r\n            modelbodystring += '</div>'\r\n            modelbodystring += '</div>'\r\n        }\r\n    });\r\n    modelbodystring += '</div >'\r\n    modelbodystring += ' <div class=\"modal-footer\">'\r\n    modelbodystring += ' <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button>'\r\n    if(window.addButton)\r\n    \tmodelbodystring += ' <button type=\"button\" class=\"btn btn-primary\" data-dismiss=\"modal\" onclick=\"return createRecord('+\"'\"+url+\"'\"+');\">Create New</button>'\r\n    modelbodystring += ' <button type=\"button\" class=\"btn btn-primary\" data-dismiss=\"modal\" onclick=\"return addRecord('+\"'\"+url+\"'\"+');\">Add Existing</button>'\r\n    modelbodystring += '</div>'\r\n    modelbodystring += '</div>'\r\n    modelbodystring += '</div>'\r\n    modelbodystring += '</div>'\r\n \r\n    $(\".modal .modal-title\").html(\"Create\");\r\n    $(\".modelpop\").html(modelbodystring);\r\n    $(\".modal\").modal(\"show\");\r\n   // $(\".modal .modal-body\").load(\"Create Data\");\r\n    //});\r\n};\r\n \r\nfunction EditTable(id) {\r\n    var d = window.editUrl;\r\n    if(!d.endsWith(id+\"/\"))\r\n    \td=d+id\r\n    $.ajax({\r\n        url: d ,\r\n        type: \"GET\",\r\n        contentType: \"application/json;charset=UTF-8\",\r\n        dataType: \"json\",\r\n        success: function (resultdata) {\r\n        \t\r\n            var modelbodystring = \"\";\r\n            modelbodystring += '<div class=\"modal fade\" tabindex=\"-1\" role=\"dialog\">'\r\n            modelbodystring += '<div class=\"modal-dialog\">'\r\n            modelbodystring += '<form id=\"updateForm\" action=\"\" method=\"PUT\"> <div class=\"modal-content\">'\r\n            modelbodystring += ' <div class=\"modal-header\">'\r\n            modelbodystring += '  <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\"><span aria-hidden=\"true\">?</span></button>'\r\n            modelbodystring += '<h4 class=\"modal-title\"></h4>'\r\n            modelbodystring += ' </div>'\r\n            modelbodystring += ' <div class=\"modal-body\">'\r\n \r\n            var loop = 0;\r\n            $.each(resultdata, function (i, v) {\r\n                if (loop == 0) {\r\n                    modelbodystring += '<div class=\"col-sm-12 modeldata\" style=\"display:none\">'\r\n                    modelbodystring += '<div class=\"col-sm-3\">'\r\n                    modelbodystring += '<label>' + i + '</label>'\r\n                    modelbodystring += '</div>'\r\n                    modelbodystring += '<div class=\"col-sm-9\">'\r\n                    if(i=='date')\r\n                       \tmodelbodystring += '<input class=\"form-control\" type=\"date\" name=' + i + ' id=' + i + ' value=\"' + v + '\"/>'\r\n                    else{\r\n                    if (v.length >= 20) {\r\n                        modelbodystring += '<textarea rows=\"4\" cols=\"50\" class=\"form-control\" type=\"text\" name=' + i + ' id=' + i + '/>'\r\n                        modelbodystring += v \r\n                        modelbodystring += '</textarea >'\r\n                    }\r\n                    else {\r\n                        modelbodystring += '<input class=\"form-control\" type=\"text\" name=' + i + ' id=' + i + ' value=\"' + v + '\"/>'\r\n                    }}\r\n                    modelbodystring += '</div>'\r\n                    modelbodystring += '</div>'\r\n                    loop++;\r\n                }\r\n                else {\r\n                \tif(i=='_links');else{\r\n                    modelbodystring += '<div class=\"col-sm-12 modeldata\">'\r\n                    modelbodystring += '<div class=\"col-sm-3\">'\r\n                    modelbodystring += '<label>' + i + '</label>'\r\n                    modelbodystring += '</div>'\r\n                    modelbodystring += '<div class=\"col-sm-9\">'\r\n                    \r\n                    if(v==null){\r\n                    \tv=\"\";\r\n                    }if(i=='date')\r\n                       \tmodelbodystring += '<input class=\"form-control\" type=\"date\" name=' + i + ' id=' + i + ' value=\"' + v + '\"/>'\r\n                        else{\r\n                    if (v.length >= 20) {\r\n                        modelbodystring += '<textarea rows=\"4\" cols=\"50\" class=\"form-control\" type=\"text\" name=' + i + ' id=' + i + '>'\r\n                        modelbodystring += v\r\n                        modelbodystring += '</textarea >'\r\n                    }\r\n                    else {\r\n                        modelbodystring += '<input class=\"form-control\" type=\"text\" name=' + i + ' id=' + i + ' value=\"' + v + '\"/>'\r\n                    }}\r\n                    modelbodystring += '</div>'\r\n                    modelbodystring += '</div>'\r\n                \t}\r\n                }\r\n            });\r\n            modelbodystring += '</div >'\r\n            modelbodystring += ' <div class=\"modal-footer\">'\r\n            modelbodystring += ' <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button>'\r\n            modelbodystring += ' <button type=\"button\" class=\"btn btn-primary\" data-dismiss=\"modal\" onclick=\"return updateRecord('+\"'\"+id+\"'\"+');\">Ok</button>'\r\n            modelbodystring += '</div>'\r\n            modelbodystring += '</div></form>'\r\n            modelbodystring += '</div>'\r\n            modelbodystring += '</div>'\r\n \r\n            \t\r\n            $(\".modal .modal-title\").html(\"Edit\");\r\n            $(\".modelpop\").html(modelbodystring);\r\n            $(\".modal\").modal(\"show\");\r\n //           $(\".modal .modal-body\").load(\"Edit Data\");\r\n            $('body').removeClass(\"loading\"); \r\n        },\r\n        error: function (errormessage) {\r\n        \t$('body').removeClass(\"loading\");\r\n            alert(errormessage.responseText);\r\n        }\r\n    });\r\n};\r\n\r\n\r\nfunction updateRecord(id){\r\n\tvar formData = {};\r\n\t//var serialize = require('form-serialize');\r\n\t//var form = document.querySelector('#updateForm');\r\n\tformData=serialize(document.getElementById(\"updateForm\"),{ hash: true });//.serialize();\r\n\tformData=JSON.stringify(formData);\r\n\t//alert(formData);\r\n\tvar d = window.editUrl;\r\n\tif(!d.endsWith(id+\"/\"))\r\n    \td=d+id\r\n\t$.ajax({\r\n        url: d, // url where to submit the request\r\n        type : \"PUT\", // type of action POST || GET\r\n        contentType: 'application/json',\r\n        dataType : 'json', // data type\r\n        data : formData, // post data || get data\r\n        success : function(result) {\r\n        \t\r\n            // you can see the result from the console\r\n            // tab of the developer tools\r\n            console.log(result);\r\n            $('body').removeClass(\"loading\");\r\n        },\r\n        error: function(errormessage) {\r\n        \t$('body').removeClass(\"loading\");\r\n        \talert(errormessage.responseText);\r\n        }\r\n    })\r\n    $(\".modal-backdrop\").remove();\r\n    setTimeout('dynamic_table(\\'' + window.entityUrl + '\\',\\''+window.editUrl+'\\' );', 100);\r\n    \r\n\treturn false;\r\n}\r\n\r\nfunction addRecord(url){\r\n\tvar formData = {};\r\n\t//var serialize = require('form-serialize');\r\n\t//var form = document.querySelector('#updateForm');\r\n\tformData=serialize(document.getElementById(\"createForm\"),{ hash: true });//.serialize();\r\n\tformData=JSON.stringify(formData);\r\n\t//alert(formData);\r\n\tvar d = url;\r\n\t$.ajax({\r\n        url: d, // url where to submit the request\r\n        type : \"PATCH\", // type of action POST || GET\r\n        contentType: 'application/json',\r\n        dataType : 'json', // data type\r\n        data : formData, // post data || get data\r\n        success : function(result) {\r\n        \t\r\n            // you can see the result from the console\r\n            // tab of the developer tools\r\n            console.log(result);\r\n            $('body').removeClass(\"loading\");\r\n        },\r\n        error: function(errormessage) {\r\n        \t$('body').removeClass(\"loading\");\r\n        \talert(errormessage.responseText);\r\n        }\r\n    });\r\n\t$(\".modal-backdrop\").remove();\r\n    setTimeout('dynamic_table(\\'' + window.entityUrl + '\\',\\''+window.editUrl+'\\' );', 100);\r\n    \r\n\treturn false;\r\n}\r\n\r\nfunction createRecord(url){\r\n\tvar formData = {};\r\n\t//var serialize = require('form-serialize');\r\n\t//var form = document.querySelector('#updateForm');\r\n\tformData=serialize(document.getElementById(\"createForm\"),{ hash: true });//.serialize();\r\n\tformData=JSON.stringify(formData);\r\n\t//alert(formData);\r\n\tvar d = url;\r\n\t$.ajax({\r\n        url: d, // url where to submit the request\r\n        type : \"POST\", // type of action POST || GET\r\n        contentType: 'application/json',\r\n        dataType : 'json', // data type\r\n        data : formData, // post data || get data\r\n        success : function(result) {\r\n            // you can see the result from the console\r\n            // tab of the developer tools\r\n            console.log(result);\r\n            $('body').removeClass(\"loading\");\r\n        },\r\n        error: function(errormessage) {\r\n        \t$('body').removeClass(\"loading\");\r\n        \talert(errormessage.responseText);\r\n        }\r\n    });\r\n\t$(\".modal-backdrop\").remove();\r\n    setTimeout('dynamic_table(\\'' + window.entityUrl + '\\',\\''+window.editUrl+'\\' );', 100);\r\n    \r\n\treturn false;\r\n}\r\n\r\nfunction deleteRecord(id){\r\n\tvar d = window.editUrl;\r\n\tif(!d.endsWith(id+\"/\"))\r\n    \td=d+id\r\n\t$.ajax({\r\n        url: d, // url where to submit the request\r\n        type : \"DELETE\", // type of action POST || GET\r\n        contentType: 'application/json',\r\n        dataType : 'json', // data type\r\n        success : function(result) {\r\n            // you can see the result from the console\r\n            // tab of the developer tools\r\n           // console.log(result);\r\n        \t$('body').removeClass(\"loading\");\r\n        },\r\n        error: function(errormessage) {\r\n        \t$('body').removeClass(\"loading\");\r\n        \tif(errormessage.responseText!=\"\")\r\n        \t\talert(errormessage.responseText);\r\n        }\r\n    })\r\n    $(\".modal-backdrop\").remove();\r\n    setTimeout('dynamic_table(\\'' + window.entityUrl + '\\',\\''+window.editUrl+'\\' );', 100);\r\n    \r\n\treturn false;\r\n}\r\n\r\n//get successful control from form and assemble into object\r\n//http://www.w3.org/TR/html401/interact/forms.html#h-17.13.2\r\n\r\n//types which indicate a submit action and are not successful controls\r\n//these will be ignored\r\nvar k_r_submitter = /^(?:submit|button|image|reset|file)$/i;\r\n\r\n//node names which could be successful controls\r\nvar k_r_success_contrls = /^(?:input|select|textarea|keygen)/i;\r\n\r\n//Matches bracket notation.\r\nvar brackets = /(\\[[^\\[\\]]*\\])/g;\r\n\r\n//serializes form fields\r\n//@param form MUST be an HTMLForm element\r\n//@param options is an optional argument to configure the serialization. Default output\r\n//with no options specified is a url encoded string\r\n// - hash: [true | false] Configure the output type. If true, the output will\r\n// be a js object.\r\n// - serializer: [function] Optional serializer function to override the default one.\r\n// The function takes 3 arguments (result, key, value) and should return new result\r\n// hash and url encoded str serializers are provided with this module\r\n// - disabled: [true | false]. If true serialize disabled fields.\r\n// - empty: [true | false]. If true serialize empty fields\r\nfunction serialize(form, options) {\r\n if (typeof options != 'object') {\r\n     options = { hash: !!options };\r\n }\r\n else if (options.hash === undefined) {\r\n     options.hash = true;\r\n }\r\n\r\n var result = (options.hash) ? {} : '';\r\n var serializer = options.serializer || ((options.hash) ? hash_serializer : str_serialize);\r\n\r\n var elements = form && form.elements ? form.elements : [];\r\n\r\n //Object store each radio and set if it's empty or not\r\n var radio_store = Object.create(null);\r\n\r\n for (var i=0 ; i<elements.length ; ++i) {\r\n     var element = elements[i];\r\n\r\n     // ingore disabled fields\r\n     if ((!options.disabled && element.disabled) || !element.name) {\r\n         continue;\r\n     }\r\n     // ignore anyhting that is not considered a success field\r\n     if (!k_r_success_contrls.test(element.nodeName) ||\r\n         k_r_submitter.test(element.type)) {\r\n         continue;\r\n     }\r\n\r\n     var key = element.name;\r\n     var val = element.value;\r\n\r\n     // we can't just use element.value for checkboxes cause some browsers lie to us\r\n     // they say \"on\" for value when the box isn't checked\r\n     if ((element.type === 'checkbox' || element.type === 'radio') && !element.checked) {\r\n         val = undefined;\r\n     }\r\n\r\n     // If we want empty elements\r\n     if (options.empty) {\r\n         // for checkbox\r\n         if (element.type === 'checkbox' && !element.checked) {\r\n             val = '';\r\n         }\r\n\r\n         // for radio\r\n         if (element.type === 'radio') {\r\n             if (!radio_store[element.name] && !element.checked) {\r\n                 radio_store[element.name] = false;\r\n             }\r\n             else if (element.checked) {\r\n                 radio_store[element.name] = true;\r\n             }\r\n         }\r\n\r\n         // if options empty is true, continue only if its radio\r\n         if (val == undefined && element.type == 'radio') {\r\n             continue;\r\n         }\r\n     }\r\n     else {\r\n         // value-less fields are ignored unless options.empty is true\r\n         if (!val) {\r\n             continue;\r\n         }\r\n     }\r\n\r\n     // multi select boxes\r\n     if (element.type === 'select-multiple') {\r\n         val = [];\r\n\r\n         var selectOptions = element.options;\r\n         var isSelectedOptions = false;\r\n         for (var j=0 ; j<selectOptions.length ; ++j) {\r\n             var option = selectOptions[j];\r\n             var allowedEmpty = options.empty && !option.value;\r\n             var hasValue = (option.value || allowedEmpty);\r\n             if (option.selected && hasValue) {\r\n                 isSelectedOptions = true;\r\n\r\n                 // If using a hash serializer be sure to add the\r\n                 // correct notation for an array in the multi-select\r\n                 // context. Here the name attribute on the select element\r\n                 // might be missing the trailing bracket pair. Both names\r\n                 // \"foo\" and \"foo[]\" should be arrays.\r\n                 if (options.hash && key.slice(key.length - 2) !== '[]') {\r\n                     result = serializer(result, key + '[]', option.value);\r\n                 }\r\n                 else {\r\n                     result = serializer(result, key, option.value);\r\n                 }\r\n             }\r\n         }\r\n\r\n         // Serialize if no selected options and options.empty is true\r\n         if (!isSelectedOptions && options.empty) {\r\n             result = serializer(result, key, '');\r\n         }\r\n\r\n         continue;\r\n     }\r\n\r\n     result = serializer(result, key, val);\r\n }\r\n\r\n // Check for all empty radio buttons and serialize them with key=\"\"\r\n if (options.empty) {\r\n     for (var key in radio_store) {\r\n         if (!radio_store[key]) {\r\n             result = serializer(result, key, '');\r\n         }\r\n     }\r\n }\r\n\r\n return result;\r\n}\r\n\r\nfunction parse_keys(string) {\r\n var keys = [];\r\n var prefix = /^([^\\[\\]]*)/;\r\n var children = new RegExp(brackets);\r\n var match = prefix.exec(string);\r\n\r\n if (match[1]) {\r\n     keys.push(match[1]);\r\n }\r\n\r\n while ((match = children.exec(string)) !== null) {\r\n     keys.push(match[1]);\r\n }\r\n\r\n return keys;\r\n}\r\n\r\nfunction hash_assign(result, keys, value) {\r\n if (keys.length === 0) {\r\n     result = value;\r\n     return result;\r\n }\r\n\r\n var key = keys.shift();\r\n var between = key.match(/^\\[(.+?)\\]$/);\r\n\r\n if (key === '[]') {\r\n     result = result || [];\r\n\r\n     if (Array.isArray(result)) {\r\n         result.push(hash_assign(null, keys, value));\r\n     }\r\n     else {\r\n         // This might be the result of bad name attributes like \"[][foo]\",\r\n         // in this case the original `result` object will already be\r\n         // assigned to an object literal. Rather than coerce the object to\r\n         // an array, or cause an exception the attribute \"_values\" is\r\n         // assigned as an array.\r\n         result._values = result._values || [];\r\n         result._values.push(hash_assign(null, keys, value));\r\n     }\r\n\r\n     return result;\r\n }\r\n\r\n // Key is an attribute name and can be assigned directly.\r\n if (!between) {\r\n     result[key] = hash_assign(result[key], keys, value);\r\n }\r\n else {\r\n     var string = between[1];\r\n     // +var converts the variable into a number\r\n     // better than parseInt because it doesn't truncate away trailing\r\n     // letters and actually fails if whole thing is not a number\r\n     var index = +string;\r\n\r\n     // If the characters between the brackets is not a number it is an\r\n     // attribute name and can be assigned directly.\r\n     if (isNaN(index)) {\r\n         result = result || {};\r\n         result[string] = hash_assign(result[string], keys, value);\r\n     }\r\n     else {\r\n         result = result || [];\r\n         result[index] = hash_assign(result[index], keys, value);\r\n     }\r\n }\r\n\r\n return result;\r\n}\r\n\r\n//Object/hash encoding serializer.\r\nfunction hash_serializer(result, key, value) {\r\n var matches = key.match(brackets);\r\n\r\n // Has brackets? Use the recursive assignment function to walk the keys,\r\n // construct any missing objects in the result tree and make the assignment\r\n // at the end of the chain.\r\n if (matches) {\r\n     var keys = parse_keys(key);\r\n     hash_assign(result, keys, value);\r\n }\r\n else {\r\n     // Non bracket notation can make assignments directly.\r\n     var existing = result[key];\r\n\r\n     // If the value has been assigned already (for instance when a radio and\r\n     // a checkbox have the same name attribute) convert the previous value\r\n     // into an array before pushing into it.\r\n     //\r\n     // NOTE: If this requirement were removed all hash creation and\r\n     // assignment could go through `hash_assign`.\r\n     if (existing) {\r\n         if (!Array.isArray(existing)) {\r\n             result[key] = [ existing ];\r\n         }\r\n\r\n         result[key].push(value);\r\n     }\r\n     else {\r\n         result[key] = value;\r\n     }\r\n }\r\n\r\n return result;\r\n}\r\n\r\n//urlform encoding serializer\r\nfunction str_serialize(result, key, value) {\r\n // encode newlines as \\r\\n cause the html spec says so\r\n value = value.replace(/(\\r)?\\n/g, '\\r\\n');\r\n value = encodeURIComponent(value);\r\n\r\n // spaces should be '+' rather than '%20'.\r\n value = value.replace(/%20/g, '+');\r\n return result + (result ? '&' : '') + encodeURIComponent(key) + '=' + value;\r\n}\r\n\r\n");
@@ -659,7 +639,7 @@ editor.grabHorizontal = true;
 	    
 	    tree.addListener(SWT.MouseDoubleClick, new Listener() {
 	        public void handleEvent(Event event) {
-	          if(tree.getItemCount()<=0)
+	          if(tree.getItemCount()<=0 || tree.getSelectionCount()<=0)
 	        	  return;
 	          final TreeItem item = tree.getSelection()[0];
 	          int colIndex=0;
@@ -723,7 +703,7 @@ editor.grabHorizontal = true;
 								scopeCombo.setItems(new String[] {"","*ck<composite-key-name>","unique<Allow-NULL>", "unique<Not-NULL>"});
 								break;
 							default:
-								scopeCombo.setItems(new String[] {"","global", "persist","local"});
+								scopeCombo.setItems(new String[] {"", "persist"});
 								break;
 						  }
 		        	  }
@@ -852,12 +832,7 @@ editor.grabHorizontal = true;
 				          else {
 				        	  item.setText(scopeIndex,"");
 				        	  item.setText(requiredIndex,"true");
-				          }
-				          if(typeCombo.getText().toLowerCase().contains("api<")) {
-				        	  item.setText(scopeIndex,"Global");
-				        	  generateAPIDefaults(item);
-				          }
-				            	  
+				          }				            	  
 		              }
 		              typeCombo.dispose();
 		            }
@@ -912,7 +887,7 @@ editor.grabHorizontal = true;
 		              }
 		            }
 		          });
-		          if(colInd==descIndex || colInd==egIndex || colInd==enumIndex || colInd==codeIndex || colInd==customIndex || colInd==importIndex) {
+		          if(colInd==descIndex || colInd==egIndex || colInd==enumIndex) {
 		        	  CustomDialogBox cdb=new CustomDialogBox(shell, SWT.NONE);
 		        	  cdb.open(item,colInd);
 		          }else
@@ -950,8 +925,16 @@ editor.grabHorizontal = true;
 		appendln(ImportJSON.padding(pad)+"\"$schema\": \"http://json-schema.org/draft-04/schema#\",");
 		if(pomText.getText()!=null && pomText.getText().trim().length()>0)
 			appendln(ImportJSON.padding(pad)+"\"pom\": \""+ImportJSON.encodeBase64(pomText.getText())+"\",");
+		
 		if(applicationText.getText()!=null && applicationText.getText().trim().length()>0)
 			appendln(ImportJSON.padding(pad)+"\"application\": \""+ImportJSON.encodeBase64(applicationText.getText())+"\",");
+		
+		if(htmlText.getText()!=null && htmlText.getText().trim().length()>0)
+			appendln(ImportJSON.padding(pad)+"\"index.html\": \""+ImportJSON.encodeBase64(htmlText.getText())+"\",");
+		
+		if(javaScriptText.getText()!=null && javaScriptText.getText().trim().length()>0)
+			appendln(ImportJSON.padding(pad)+"\"javascript\": \""+ImportJSON.encodeBase64(javaScriptText.getText())+"\",");		
+		
 		appendln(ImportJSON.padding(pad)+"\"type\": \"object\", ");
 		appendln(ImportJSON.padding(pad)+"\"properties\": {");
 		for (TreeItem item : items) {
@@ -974,42 +957,6 @@ editor.grabHorizontal = true;
 	private void processItem(TreeItem item,int pad,ClassMetaData cls) throws Exception{
 		String type=item.getText(typeIndex);//type of object
 		//Map<String, Object> cls=null;
-		if(type.toLowerCase().contains("api")) {
-			String apiMethod=type.toLowerCase().replace("api<", "").replace(">", "");
-			String clsName=item.getText(nameIndex);
-			appendln("\n"+ImportJSON.padding(pad)+"\""+clsName+"\":{"); 
-			cls=CG.createAPIClass(clsName);
-			API api=cls.getAPI();
-			api.method=apiMethod;
-			if(api.code==null || api.code.trim().length()==0)
-				api.code=ImportJSON.encodeBase64(item.getText(codeIndex));
-			if(api.custom==null || api.custom.trim().length()==0)
-				api.custom=ImportJSON.encodeBase64(item.getText(customIndex));
-			if(api.imports==null || api.imports.trim().length()==0)
-				api.imports=ImportJSON.encodeBase64(item.getText(importIndex));
-			if(cls.getDescription()==null || cls.getDescription().trim().length()==0)
-				cls.setDescription(item.getText(descIndex));
-			if(cls.getTitle()==null || cls.getTitle().trim().length()==0)
-				cls.setTitle(item.getText(titleIndex));
-			cls.setScope(item.getText(scopeIndex));
-			if("false".equalsIgnoreCase(item.getText(requiredIndex))) {
-				cls.setRequired(false);
-				CG.classes.get(clsName+"Resource").setRequired(false);
-			}
-    		appendln(ImportJSON.padding(pad+1)+"\"type\":\""+type+"\",");
-    		appendln(ImportJSON.padding(pad+1)+"\"required\":\""+item.getText(requiredIndex)+"\",");
-    		appendln(ImportJSON.padding(pad+1)+"\"scope\":\""+cls.getScope()+"\",");
-    		appendln(ImportJSON.padding(pad+1)+"\"title\":\""+cls.getTitle()+"\",");
-    		appendln(ImportJSON.padding(pad+1)+"\"code\":\""+cls.getAPI().code+"\",");
-    		appendln(ImportJSON.padding(pad+1)+"\"custom\":\""+cls.getAPI().custom+"\",");
-    		appendln(ImportJSON.padding(pad+1)+"\"import\":\""+cls.getAPI().imports+"\",");
-    		appendln(ImportJSON.padding(pad+1)+"\"description\":\""+cls.getDescription()+"\",");
-    		
-    		appendln(ImportJSON.padding(pad+1)+"\"properties\":{");
-    		newSchema(item, pad+2,cls);
-    		appendln(ImportJSON.padding(pad+1)+"}");
-    		append(ImportJSON.padding(pad)+"},");
-		}else
 		if(type.equalsIgnoreCase("object")) {
 			String clsName=item.getText(nameIndex);
 			appendln("\n"+ImportJSON.padding(pad)+"\""+clsName+"\":{");
@@ -1205,19 +1152,25 @@ editor.grabHorizontal = true;
 	    ti.setText(enumIndex, (map.get("enum")+"").replace("null", ""));
 	    ti.setText(scopeIndex, (map.get("scope")+"").replace("null", ""));
 	    ti.setText(requiredIndex, (map.get("required")+"").replace("null", ""));
-	    if(map.get("code")!=null && map.get("code").toString().trim().length()>0) {
-	    	String code=map.get("code").toString();
-	    	ti.setText(codeIndex, ImportJSON.decodeBase64(code));
+	    
+	    if(map.get("index.html")!=null && map.get("index.html").toString().trim().length()>0) {
+	    	String code=map.get("index.html").toString();
+	    	htmlText.setText(ImportJSON.decodeBase64(code));
 	    }
 	    
-	    if(map.get("custom")!=null && map.get("custom").toString().trim().length()>0) {
-	    	String code=map.get("custom").toString();
-	    	ti.setText(customIndex, ImportJSON.decodeBase64(code));
+	    if(map.get("javascript")!=null && map.get("javascript").toString().trim().length()>0) {
+	    	String code=map.get("javascript").toString();
+	    	javaScriptText.setText(ImportJSON.decodeBase64(code));
 	    }
 	    
-	    if(map.get("import")!=null && map.get("import").toString().trim().length()>0) {
-	    	String code=map.get("import").toString();
-	    	ti.setText(importIndex, ImportJSON.decodeBase64(code));
+	    if(map.get("app")!=null && map.get("app").toString().trim().length()>0) {
+	    	String code=map.get("app").toString();
+	    	applicationText.setText(ImportJSON.decodeBase64(code));
+	    }
+	    
+	    if(map.get("pom")!=null && map.get("pom").toString().trim().length()>0) {
+	    	String code=map.get("pom").toString();
+	    	pomText.setText(ImportJSON.decodeBase64(code));
 	    }
 	    
 	    for (int i = 0; i < itemCount; i++) {
@@ -1260,103 +1213,6 @@ editor.grabHorizontal = true;
 		return selected;
 	}
 	
-	private void generateAPIDefaults(TreeItem selItem) {
-		if(selItem.getItemCount()>0)
-			return;
-		TreeItem item = new TreeItem(selItem, SWT.FULL_SELECTION);
-		item.setText(nameIndex, "path");
-		item.setText(descIndex, "This is resource path. You can write the path in the Value cell");
-		item.setText(titleIndex, "Path");
-		item.setText(typeIndex, "string");
-		item.setText(egIndex, "/books/{id}");
-		item.setText(enumIndex, "");
-		item.setText(requiredIndex, "");
-		item.setText(scopeIndex, "");
-		//item.setText(codeIndex, "Write your java code here.");
-		
-		item = new TreeItem(selItem, SWT.FULL_SELECTION);
-		item.setText(nameIndex, "id");
-		item.setText(descIndex, "This will be treated as path param as it has a refernce in path value section");
-		item.setText(titleIndex, "ID");
-		item.setText(typeIndex, "string");
-		item.setText(egIndex, "sample value");
-		item.setText(enumIndex, "");
-		item.setText(requiredIndex, "true");
-		item.setText(scopeIndex, "");
-		//item.setText(codeIndex, "Write your java code here.");
-		
-		item = new TreeItem(selItem, SWT.FULL_SELECTION);
-		item.setText(nameIndex, "version");
-		item.setText(descIndex, "This is a querry param. If you reference it in path then it will be treated as path param");
-		item.setText(titleIndex, "Version");
-		item.setText(typeIndex, "string");
-		item.setText(egIndex, "1.0.0");
-		item.setText(enumIndex, "");
-		item.setText(requiredIndex, "true");
-		item.setText(scopeIndex, "");
-		
-		TreeItem headers = new TreeItem(selItem, SWT.FULL_SELECTION);
-		headers.setText(nameIndex, "Headers");
-		headers.setText(descIndex, "This is a header object. Define your request/response headers inside");
-		headers.setText(titleIndex, "Header");
-		headers.setText(typeIndex, "object");
-		headers.setText(egIndex, "");
-		headers.setText(enumIndex, "");
-		headers.setText(requiredIndex, "true");
-		headers.setText(scopeIndex, "Local");
-		
-		item = new TreeItem(headers, SWT.FULL_SELECTION);
-		item.setText(nameIndex, "RequestHeaders");
-		item.setText(descIndex, "Add your request header params inside");
-		item.setText(titleIndex, "Request Headers");
-		item.setText(typeIndex, "object");
-		item.setText(egIndex, "");
-		item.setText(enumIndex, "");
-		item.setText(requiredIndex, "true");
-		item.setText(scopeIndex, "Local");
-		
-		item = new TreeItem(headers, SWT.FULL_SELECTION);
-		item.setText(nameIndex, "ResponseHeaders");
-		item.setText(descIndex, "Add your response header params inside");
-		item.setText(titleIndex, "Response Headers");
-		item.setText(typeIndex, "object");
-		item.setText(egIndex, "");
-		item.setText(enumIndex, "");
-		item.setText(requiredIndex, "true");
-		item.setText(scopeIndex, "Local");
-		
-		
-		TreeItem payloads = new TreeItem(selItem, SWT.FULL_SELECTION);
-		payloads.setText(nameIndex, "Payload");
-		payloads.setText(descIndex, "This is a payload object. Define your request/response payloads inside");
-		payloads.setText(titleIndex, "Payload");
-		payloads.setText(typeIndex, "object");
-		payloads.setText(egIndex, "");
-		payloads.setText(enumIndex, "");
-		payloads.setText(requiredIndex, "true");
-		payloads.setText(scopeIndex, "Local");
-		
-		item = new TreeItem(payloads, SWT.FULL_SELECTION);
-		item.setText(nameIndex, "RequestPayload");
-		item.setText(descIndex, "Add your request payload params inside");
-		item.setText(titleIndex, "Request Payload");
-		item.setText(typeIndex, "object");
-		item.setText(egIndex, "");
-		item.setText(enumIndex, "");
-		item.setText(requiredIndex, "true");
-		item.setText(scopeIndex, "Local");
-		
-		item = new TreeItem(payloads, SWT.FULL_SELECTION);
-		item.setText(nameIndex, "ResponsePayload");
-		item.setText(descIndex, "Add your response payload params inside");
-		item.setText(titleIndex, "Payload Headers");
-		item.setText(typeIndex, "object");
-		item.setText(egIndex, "");
-		item.setText(enumIndex, "");
-		item.setText(requiredIndex, "true");
-		item.setText(scopeIndex, "Local");
-
-	}
 	private void openMokshSchema() throws Exception {
 		String filePath=openFileDialog();
 		if(filePath==null || filePath.trim().length()==0)

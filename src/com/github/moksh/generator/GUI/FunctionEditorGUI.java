@@ -903,6 +903,8 @@ public class FunctionEditorGUI extends Composite {
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				if(CG.classes!=null)
+					CG.classes.clear();
 				ClassMetaData service = generateClasses(treeLeft, treeRight, parameterTree, packageName.getText(),
 						txtImportPackages.getText(), txtImplementYourMain.getText(), txtWriteYourPrivate.getText(),
 						txtVersion.getText(), txtOperation.getText(), txtPath.getText(), methodCombo.getText());
@@ -1244,7 +1246,7 @@ public class FunctionEditorGUI extends Composite {
 		}
 //		functionJsonWrapper.addParam("", "String", "jsonPayload");
 //		functionJsonWrapper.exceptions.add("Exception");
-
+		apiActionImpl.exceptions.add("Exception");
 		if (payload.getProperty("requestpayload") != null) {
 			
 		if(payload.getProperty("requestpayload").type.startsWith("List<"))

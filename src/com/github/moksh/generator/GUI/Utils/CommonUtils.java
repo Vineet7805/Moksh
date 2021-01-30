@@ -62,6 +62,7 @@ public class CommonUtils {
 		editor.grabHorizontal = true;
 		tree.addListener(SWT.MouseDoubleClick, new Listener() {
 			public void handleEvent(Event event) {
+				try {
 				if (tree.getItemCount() <= 0)
 					return;
 				final TreeItem item = tree.getSelection()[0];
@@ -141,7 +142,11 @@ public class CommonUtils {
 					});
 					editor.setEditor(text, item, colInd);
 				}
+			} catch (Exception e) {
+				new ErrorDialogBox(tree.getShell(), tree.getShell().getStyle()).open(e);
 			}
+			}
+			
 
 		});
 		Font treeFont = new Font(tree.getDisplay(), new FontData("Segoe UI", 8, SWT.NORMAL));

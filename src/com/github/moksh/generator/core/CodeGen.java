@@ -626,7 +626,7 @@ public class CodeGen {
 		func.codeLines.add("}catch(Exception e){}");
 	}
 
-	public String generateClasses(String packageName, String folderPath, String htmlTemplate,String jsTemplate,String cssTemplate) throws Exception {
+	public String generateClasses(String packageName, String folderPath, String htmlTemplate,String jsTemplate,String cssTemplate, String baseUrl) throws Exception {
 		// String packageName=basePackage.getText();
 		if (packageName == null || packageName.trim().length() == 0) {
 			return ("Please specify base package name like com.example.model");
@@ -733,7 +733,7 @@ public class CodeGen {
 		for (Object key : keys) {
 			ClassMetaData clazz = classes.get(key);
 			clazz.exportJava(folderPath, packageName);
-			navigation=clazz.exportGUI(folderPath, navigation);
+			navigation=clazz.exportGUI(folderPath, navigation,baseUrl);
 		}
 		System.out.println("navigation-updated: "+navigation);
 		String dirPath=folderPath.split("java")[0]+"resources/static/admin-ui/";
