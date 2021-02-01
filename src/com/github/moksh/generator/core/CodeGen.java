@@ -581,6 +581,7 @@ public class CodeGen {
 		if(otmProp.removeAnnotation("@OneToMany")) {
 			System.out.println("OneToMany removed from: "+rel);
 			otmProp.annotations.add("@ManyToMany(mappedBy = \""+getPlural(CommonUtils.toLowerFirst(otm.getName()))+"\")");
+			otmProp.removeAnnotation("@JoinColumn");
 			otm.addImport("import javax.persistence.ManyToMany;");
 			Property entityMtM=entity.getProperty(getPlural(CommonUtils.toLowerFirst(rel)));
 			if(entityMtM.removeAnnotation("@OneToMany")){
