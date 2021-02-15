@@ -1374,7 +1374,7 @@ public class FunctionEditorGUI extends Composite {
 				} else {
 					cls.addImport("import java.util.List;");
 					Property prop = cls.addProperty("private", "List<" + clsName + ">",
-							CodeGen.getPlural(clsName.toLowerCase()), false);
+							CommonUtils.getPlural(clsName.toLowerCase()), false);
 					cls = CG.createEntityClass(clsName, "Local", cls.getRoot() + "." + clsName);
 				}
 			} else {
@@ -1382,16 +1382,16 @@ public class FunctionEditorGUI extends Composite {
 					cls = CG.createEntityClass(clsName, "Local", clsName);
 					Property prop = null;
 					if (subType.equalsIgnoreCase("string"))
-						prop = cls.addProperty("private ", "String[]", CodeGen.getPlural(clsName.toLowerCase()), true);
+						prop = cls.addProperty("private ", "String[]", CommonUtils.getPlural(clsName.toLowerCase()), true);
 					else
-						prop = cls.addProperty("private ", subType + "[]", CodeGen.getPlural(clsName.toLowerCase()),
+						prop = cls.addProperty("private ", subType + "[]", CommonUtils.getPlural(clsName.toLowerCase()),
 								true);
 				} else {
 					Property prop = null;
 					if (subType.equalsIgnoreCase("string"))
-						prop = cls.addProperty("private ", "String[]", CodeGen.getPlural(clsName.toLowerCase()), true);
+						prop = cls.addProperty("private ", "String[]", CommonUtils.getPlural(clsName.toLowerCase()), true);
 					else
-						prop = cls.addProperty("private ", CommonUtils.resolveJavaType(subType,null) + "[]", CodeGen.getPlural(clsName.toLowerCase()),
+						prop = cls.addProperty("private ", CommonUtils.resolveJavaType(subType,null) + "[]", CommonUtils.getPlural(clsName.toLowerCase()),
 								true);
 					cls = CG.createEntityClass(clsName, "Local", cls.getRoot() + "." + clsName);
 				}

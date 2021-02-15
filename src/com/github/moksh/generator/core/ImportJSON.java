@@ -20,7 +20,9 @@ public class ImportJSON {
 	public Map<String, Object> schemaMap;
 	public static String POM=null;
 	public static String APP=null;
-	
+	public static String CSS=null;
+	public static String JS=null;
+	public static String HTML=null;
 	public ImportJSON() {
 		// TODO Auto-generated constructor stub
 		schemaMap=new HashMap<String, Object>();
@@ -69,6 +71,16 @@ public class ImportJSON {
         	POM=decodeBase64(jo.get("pom").toString());
         if(jo.get("application")!=null)
         	APP=decodeBase64(jo.get("application").toString());
+        
+        if(jo.get("index.html")!=null)
+        	HTML=decodeBase64(jo.get("index.html").toString());
+        
+        if(jo.get("javascript")!=null)
+        	JS=decodeBase64(jo.get("javascript").toString());
+        
+        if(jo.get("css")!=null)
+        	CSS=decodeBase64(jo.get("application").toString());       
+        
         jo=(JSONObject)jo.get("properties");
 //        if(jo.get("type")!=null)
 //        	jo=(JSONObject)(new JSONParser().parse("{\"_root\":"+org+"}"));

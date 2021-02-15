@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
+import org.jsonschema2pojo.util.Inflector;
 
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -53,7 +54,8 @@ import com.github.moksh.generator.core.JPOP;
 import com.github.moksh.generator.core.JsonPatcher;
 
 public class CommonUtils {
-	private static int MAX_ELEMENTS=-5;
+	private static int MAX_ELEMENTS = -5;
+
 	public static void enableTreeSchemaEditor(Tree tree, Map<String, Integer> columnNameIndexMap) {
 		tree.setHeaderVisible(true);
 		tree.setLinesVisible(true);
@@ -63,90 +65,89 @@ public class CommonUtils {
 		tree.addListener(SWT.MouseDoubleClick, new Listener() {
 			public void handleEvent(Event event) {
 				try {
-				if (tree.getItemCount() <= 0)
-					return;
-				final TreeItem item = tree.getSelection()[0];
-				int colIndex = 0;
-				// System.out.println(event.getBounds().x+","+event.getBounds().y);
-				for (int i = 0; i < tree.getColumnCount(); i++) {
-					// System.out.println(i);
-					if (item.getBounds(i).contains(event.getBounds().x, event.getBounds().y))
-						colIndex = i;
-				}
-				final int colInd = colIndex;
-				if (colInd == columnNameIndexMap.get("Type")) {
-					Combo typeCombo = new Combo(tree, SWT.READ_ONLY);
-					if(item.getText(colIndex).toLowerCase().contains("array") && item.getItemCount()==0) {
-						typeCombo.setItems(new String[] { "array<string>", "array<number>", "array<boolean>",
-								"array<integer>", "array<object>", "object" });
-					} else if (item.getItemCount() == 0)
-						typeCombo.setItems(
-								new String[] { "string", "number", "boolean", "integer", "object", "array<object>" });
-					else
-						typeCombo.setItems(new String[] { "object", "array<object>" });
-					// final Text text = new Text(tree, SWT.NONE);
-					typeCombo.setText(item.getText(colIndex).toLowerCase());
-					// text.selectAll();
-					typeCombo.setFocus();
-					typeCombo.addFocusListener(new FocusAdapter() {
-						public void focusLost(FocusEvent event) {
-							if (!item.getText(colInd).equalsIgnoreCase(typeCombo.getText())) {
-								// item.setText(formatIndex,"");
-								item.setText(colInd, typeCombo.getText());
-								// item.setText(scopeIndex,"");
-							}
-							typeCombo.dispose();
-						}
-					});
-
-					typeCombo.addKeyListener(new KeyAdapter() {
-						public void keyPressed(KeyEvent event) {
-							switch (event.keyCode) {
-							case SWT.CR:
-								item.setText(colInd, typeCombo.getText().toLowerCase());
-							case SWT.ESC:
+					if (tree.getItemCount() <= 0)
+						return;
+					final TreeItem item = tree.getSelection()[0];
+					int colIndex = 0;
+					// System.out.println(event.getBounds().x+","+event.getBounds().y);
+					for (int i = 0; i < tree.getColumnCount(); i++) {
+						// System.out.println(i);
+						if (item.getBounds(i).contains(event.getBounds().x, event.getBounds().y))
+							colIndex = i;
+					}
+					final int colInd = colIndex;
+					if (colInd == columnNameIndexMap.get("Type")) {
+						Combo typeCombo = new Combo(tree, SWT.READ_ONLY);
+						if (item.getText(colIndex).toLowerCase().contains("array") && item.getItemCount() == 0) {
+							typeCombo.setItems(new String[] { "array<string>", "array<number>", "array<boolean>",
+									"array<integer>", "array<object>", "object" });
+						} else if (item.getItemCount() == 0)
+							typeCombo.setItems(new String[] { "string", "number", "boolean", "integer", "object",
+									"array<object>" });
+						else
+							typeCombo.setItems(new String[] { "object", "array<object>" });
+						// final Text text = new Text(tree, SWT.NONE);
+						typeCombo.setText(item.getText(colIndex).toLowerCase());
+						// text.selectAll();
+						typeCombo.setFocus();
+						typeCombo.addFocusListener(new FocusAdapter() {
+							public void focusLost(FocusEvent event) {
+								if (!item.getText(colInd).equalsIgnoreCase(typeCombo.getText())) {
+									// item.setText(formatIndex,"");
+									item.setText(colInd, typeCombo.getText());
+									// item.setText(scopeIndex,"");
+								}
 								typeCombo.dispose();
-								break;
 							}
-						}
-					});
-					editor.setEditor(typeCombo, item, colInd);
-				} else {
-					final Text text = new Text(tree, SWT.NONE);
-					text.setText(item.getText(colIndex));
-					text.selectAll();
-					text.setFocus();
+						});
 
-					text.addFocusListener(new FocusAdapter() {
-						public void focusLost(FocusEvent event) {
-							if (colInd == columnNameIndexMap.get("Name")) {
-
+						typeCombo.addKeyListener(new KeyAdapter() {
+							public void keyPressed(KeyEvent event) {
+								switch (event.keyCode) {
+								case SWT.CR:
+									item.setText(colInd, typeCombo.getText().toLowerCase());
+								case SWT.ESC:
+									typeCombo.dispose();
+									break;
+								}
 							}
-							item.setText(colInd, text.getText());
-							text.dispose();
-						}
-					});
+						});
+						editor.setEditor(typeCombo, item, colInd);
+					} else {
+						final Text text = new Text(tree, SWT.NONE);
+						text.setText(item.getText(colIndex));
+						text.selectAll();
+						text.setFocus();
 
-					text.addKeyListener(new KeyAdapter() {
-						public void keyPressed(KeyEvent event) {
-							switch (event.keyCode) {
-							case SWT.CR:
+						text.addFocusListener(new FocusAdapter() {
+							public void focusLost(FocusEvent event) {
+								if (colInd == columnNameIndexMap.get("Name")) {
 
+								}
 								item.setText(colInd, text.getText());
 								text.dispose();
-							case SWT.ESC:
-								text.dispose();
-								break;
 							}
-						}
-					});
-					editor.setEditor(text, item, colInd);
+						});
+
+						text.addKeyListener(new KeyAdapter() {
+							public void keyPressed(KeyEvent event) {
+								switch (event.keyCode) {
+								case SWT.CR:
+
+									item.setText(colInd, text.getText());
+									text.dispose();
+								case SWT.ESC:
+									text.dispose();
+									break;
+								}
+							}
+						});
+						editor.setEditor(text, item, colInd);
+					}
+				} catch (Exception e) {
+					new ErrorDialogBox(tree.getShell(), tree.getShell().getStyle()).open(e);
 				}
-			} catch (Exception e) {
-				new ErrorDialogBox(tree.getShell(), tree.getShell().getStyle()).open(e);
 			}
-			}
-			
 
 		});
 		Font treeFont = new Font(tree.getDisplay(), new FontData("Segoe UI", 8, SWT.NORMAL));
@@ -192,8 +193,8 @@ public class CommonUtils {
 
 	public static void addSchema(String schema, TreeItem treeItem, Map<String, Integer> columnNameIndexMap)
 			throws Exception {
-		//System.out.println("Add this schema---------------------------");
-		//System.out.println(schema);
+		// System.out.println("Add this schema---------------------------");
+		// System.out.println(schema);
 		ImportJSON importJson = ImportJSON.getInstance();
 		String result[] = importJson.generatePayload(schema);
 		schema = result[0];
@@ -208,7 +209,7 @@ public class CommonUtils {
 			}
 		}
 		for (TreeItem item : dispose) {
-			//System.out.println("Disposing:" + item.getText(0));
+			// System.out.println("Disposing:" + item.getText(0));
 
 			item.removeAll();
 			item.dispose();
@@ -237,7 +238,8 @@ public class CommonUtils {
 		for (int i = 0; i < itemCount; i++) {
 			if (map.get(keys[i]) instanceof Map) {
 				TreeItem item = new TreeItem(ti, SWT.FULL_SELECTION);
-				item.setText(columnNameIndexMap.get("Name"), keys[i].toString());// +"<"+(map.get("type")+"").replace("null",// "")+">");
+				item.setText(columnNameIndexMap.get("Name"), keys[i].toString());// +"<"+(map.get("type")+"").replace("null",//
+																					// "")+">");
 				loadSchemaEditor((Map) map.get(keys[i]), item, columnNameIndexMap);
 			}
 		}
@@ -260,56 +262,57 @@ public class CommonUtils {
 			String payload, boolean isEditable) {
 		tree.setHeaderVisible(true);
 		tree.setLinesVisible(true);
-		if(isEditable)
-		tree.addListener(SWT.MouseDoubleClick, new Listener() {
-			public void handleEvent(Event event) {
-				if(tree.getSelection().length==0)
-					return;
-				final TreeItem ti = tree.getSelection()[0];
-				if ((ti.getText(columnNameIndexMap.get("Type")).contains("array<") || ti.getText(columnNameIndexMap.get("Type")).contains("object"))) {
-					return;
-				}
-				if(!isEligible(ti, columnNameIndexMap)) {
-					return;
-				}
-				final TreeEditor editor = new TreeEditor(tree);
-				editor.horizontalAlignment = SWT.LEFT;
-				editor.grabHorizontal = true;
-				// System.out.println("Double clicked...............................and is
-				// eligilbe:" + isEligible);// +":"+isEligible(treeItem,
-				
+		if (isEditable)
+			tree.addListener(SWT.MouseDoubleClick, new Listener() {
+				public void handleEvent(Event event) {
+					if (tree.getSelection().length == 0)
+						return;
+					final TreeItem ti = tree.getSelection()[0];
+					if ((ti.getText(columnNameIndexMap.get("Type")).contains("array<")
+							|| ti.getText(columnNameIndexMap.get("Type")).contains("object"))) {
+						return;
+					}
+					if (!isEligible(ti, columnNameIndexMap)) {
+						return;
+					}
+					final TreeEditor editor = new TreeEditor(tree);
+					editor.horizontalAlignment = SWT.LEFT;
+					editor.grabHorizontal = true;
+					// System.out.println("Double clicked...............................and is
+					// eligilbe:" + isEligible);// +":"+isEligible(treeItem,
+
 					// System.out.println("Double clicked...............................");
 					final Text text = new Text(tree, SWT.NONE);
 					int colInd = columnNameIndexMap.get("Value");
 					text.setText(ti.getText(colInd));
 					text.addKeyListener(new KeyListener() {
-						
+
 						@Override
 						public void keyReleased(KeyEvent arg0) {
 							// TODO Auto-generated method stub
-							ti.setText(colInd,text.getText());
+							ti.setText(colInd, text.getText());
 						}
-						
+
 						@Override
 						public void keyPressed(KeyEvent arg0) {
 							// TODO Auto-generated method stub
-							
+
 						}
 					});
 					editor.setEditor(text, ti, colInd);
 					ti.addListener(SWT.Dispose, new Listener() {
 						public void handleEvent(Event event) {
-							
+
 							ti.removeListener(SWT.Dispose, this);
 							editor.dispose();
 						}
 					});
-			}
-		});
-		if(isEditable)
-			enableJsonEditor(tree, null, schema, columnNameIndexMap, payload,isEditable,schema);
+				}
+			});
+		if (isEditable)
+			enableJsonEditor(tree, null, schema, columnNameIndexMap, payload, isEditable, schema);
 		else
-			loadJsonData(tree, null, schema, columnNameIndexMap, payload,isEditable,schema);
+			loadJsonData(tree, null, schema, columnNameIndexMap, payload, isEditable, schema);
 	}
 
 	public static String getXPathForJson(TreeItem item, int nameIndex) {
@@ -321,9 +324,9 @@ public class CommonUtils {
 			while (item != null) {
 				item = item.getParentItem();
 				String xP = "/" + item.getText(nameIndex);
-				//System.out.println("xP-------------------------");
-				//System.out.println(xP);
-				//System.out.println("---------------------------");
+				// System.out.println("xP-------------------------");
+				// System.out.println(xP);
+				// System.out.println("---------------------------");
 				if (item.getText(nameIndex).contains("[")) {
 					xP = xP.replace(item.getText(nameIndex).split(Pattern.quote("["))[0], "").replace("/[", "/");
 				}
@@ -334,49 +337,49 @@ public class CommonUtils {
 		}
 		return xPath.replace("]/", "/");
 	}
-	
-	public static String getXPath(TreeItem item,int nameIndex,int typeIndex) {
+
+	public static String getXPath(TreeItem item, int nameIndex, int typeIndex) {
 		String xPath = getXPath(item, nameIndex, typeIndex, true);
 		return xPath;
 	}
-	
-	private static String getXPath(TreeItem item,int nameIndex,int typeIndex, boolean isLeaf) {
+
+	private static String getXPath(TreeItem item, int nameIndex, int typeIndex, boolean isLeaf) {
 		String xPath = "/" + item.getText(nameIndex);
 		if (item.getText(typeIndex).contains("array<")) {
-			if(isLeaf) {
-				xPath = xPath+"/*";
-				isLeaf=false;
-			}else
-				xPath = xPath+"/0";
+			if (isLeaf) {
+				xPath = xPath + "/*";
+				isLeaf = false;
+			} else
+				xPath = xPath + "/0";
 		}
 		try {
 			TreeItem itemP = item.getParentItem();
-			String xP = getXPath(itemP,nameIndex,typeIndex,isLeaf);// + xPath;
-			xPath=xP + xPath;
+			String xP = getXPath(itemP, nameIndex, typeIndex, isLeaf);// + xPath;
+			xPath = xP + xPath;
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
 		return xPath;
 	}
 
-	public static String getSchemaXPath(TreeItem item,int nameIndex,int typeIndex) {
+	public static String getSchemaXPath(TreeItem item, int nameIndex, int typeIndex) {
 		String xPath = "/" + item.getText(nameIndex);
-		//System.out.println("Name: "+xPath);
+		// System.out.println("Name: "+xPath);
 		try {
 			TreeItem itemP = item.getParentItem();
 			if (item.getText(typeIndex).contains("array<") || item.getText(typeIndex).equals("object"))
 				xPath = "/properties" + xPath;
 			if (itemP.getText(typeIndex).contains("array<"))
 				xPath = "/items" + xPath;
-			xPath = getSchemaXPath(itemP,nameIndex,typeIndex) + xPath;
+			xPath = getSchemaXPath(itemP, nameIndex, typeIndex) + xPath;
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
-		//System.out.println("Before modifying: "+xPath);
-		if(item.getText(nameIndex).contains("[")) {
-			xPath=xPath.replace("/properties/"+item.getText(nameIndex), "");
+		// System.out.println("Before modifying: "+xPath);
+		if (item.getText(nameIndex).contains("[")) {
+			xPath = xPath.replace("/properties/" + item.getText(nameIndex), "");
 		}
-		//System.out.println(xPath);
+		// System.out.println(xPath);
 		return xPath;
 	}
 
@@ -399,25 +402,26 @@ public class CommonUtils {
 	}
 
 	public static void addJsonArrayElement(Tree tree, TreeItem treeItem, String schema,
-			Map<String, Integer> columnNameIndexMap, String payload, boolean isEditable,String mainSchema) {
+			Map<String, Integer> columnNameIndexMap, String payload, boolean isEditable, String mainSchema) {
 		try {
 
 			ObjectMapper om = new ObjectMapper();
 			JsonNode node = om.readTree(mainSchema);
-			//String path = getSchemaXPath(treeItem,columnNameIndexMap.get("Name"),columnNameIndexMap.get("Type"));
-			//System.out.println("Schema xPath------------");
-			//System.out.println(path);
-			//System.out.println(node.toPrettyString());
-			//System.out.println("==========================================");
-			String schemaXP=getSchemaXPath(treeItem,columnNameIndexMap.get("Name"),columnNameIndexMap.get("Type"));
+			// String path =
+			// getSchemaXPath(treeItem,columnNameIndexMap.get("Name"),columnNameIndexMap.get("Type"));
+			// System.out.println("Schema xPath------------");
+			// System.out.println(path);
+			// System.out.println(node.toPrettyString());
+			// System.out.println("==========================================");
+			String schemaXP = getSchemaXPath(treeItem, columnNameIndexMap.get("Name"), columnNameIndexMap.get("Type"));
 			node = node.at(schemaXP);
-			//System.out.println(schemaXP);
+			// System.out.println(schemaXP);
 			int count = 0;
 			for (TreeItem item : treeItem.getItems()) {
 				if (item.getText(columnNameIndexMap.get("Name")).contains("["))
-					count=treeItem.getItems().length;
+					count = treeItem.getItems().length;
 				else
-					count=0;
+					count = 0;
 				break;
 			}
 			String temp = "";
@@ -429,14 +433,13 @@ public class CommonUtils {
 //						.replaceFirst(Pattern.quote(":"), "").replaceFirst(Pattern.quote("{"), "") + "END-OF-SCHEMA")
 //								.replaceFirst(Pattern.quote("}END-OF-SCHEMA"), "");
 //				temp = temp.replace("\"\"", "");
-				//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++");
-				//System.out.println(node.toPrettyString());
-				node=node.at("/items");
-				temp=node.toPrettyString();
-				//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++");
-				//System.out.println(temp);
-				//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++");
-				
+				// System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++");
+				// System.out.println(node.toPrettyString());
+				node = node.at("/items");
+				temp = node.toPrettyString();
+				// System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++");
+				// System.out.println(temp);
+				// System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++");
 
 			} else {
 				temp = "{\"type\":\""
@@ -452,123 +455,127 @@ public class CommonUtils {
 			// \"properties\":{\""+treeItem.getText(columnNameIndexMap.get("Name"))+"["+count+"]\":"+temp+"}}";
 
 			String type = treeItem.getText(1);
-			//System.out.println(newSchemaElemet);
+			// System.out.println(newSchemaElemet);
 			addSchema(newSchemaElemet, treeItem, columnNameIndexMap);
 			treeItem.setText(1, type);
 			int size = treeItem.getItemCount() - 1;
-			if(isEditable)
-				enableJsonEditor(tree, treeItem.getItems(), newSchemaElemet, columnNameIndexMap, payload,isEditable,mainSchema);
+			if (isEditable)
+				enableJsonEditor(tree, treeItem.getItems(), newSchemaElemet, columnNameIndexMap, payload, isEditable,
+						mainSchema);
 		} catch (Exception er) {
 			new ErrorDialogBox(tree.getShell(), tree.getShell().getStyle()).open(er);
 		}
 	}
 
 	private static void addJsonData(Tree tree, TreeItem treeItem, String schema,
-			Map<String, Integer> columnNameIndexMap, String payload, boolean isEditable,String mainSchema) throws Exception {
+			Map<String, Integer> columnNameIndexMap, String payload, boolean isEditable, String mainSchema)
+			throws Exception {
 		if (payload != null) {
 			ObjectMapper om = new ObjectMapper();
 			JsonNode node = om.readTree(payload);
 			String xPath = getXPathForJson(treeItem, columnNameIndexMap.get("Name"));
-			//System.out.println("Payload xPath:---------------------\n" + xPath);
+			// System.out.println("Payload xPath:---------------------\n" + xPath);
 			node = node.at(xPath);
-			//System.out.println("-: "+node.size());
+			// System.out.println("-: "+node.size());
 			if (node != null) {
 				for (int loop = 0; loop < node.size(); loop++) {
-					
-					addJsonArrayElement(tree, treeItem, schema, columnNameIndexMap, payload,isEditable,mainSchema);
-					
+
+					addJsonArrayElement(tree, treeItem, schema, columnNameIndexMap, payload, isEditable, mainSchema);
+
 				}
 			}
 		}
 	}
-	
-	public static JsonNode applyPatch(String jsonPatch,JsonNode jnTarget) throws Exception{
-		ObjectMapper om=new ObjectMapper();
-		//JsonNode jPatchNode=om.readTree(jsonPatch);
-		jsonPatch=jsonPatch.replaceAll("\n", "").replaceAll("\r", "");
-		//System.out.println("----------------------------------------------------------------------------");
-		//System.out.println(jsonPatch);
-		List<JPOP> Ops = om.readValue(jsonPatch,new TypeReference<List<JPOP>>() {});
-		Map<String, List<JPOP>> nestedOpMap=new HashMap<String, List<JPOP>>();
+
+	public static JsonNode applyPatch(String jsonPatch, JsonNode jnTarget) throws Exception {
+		ObjectMapper om = new ObjectMapper();
+		// JsonNode jPatchNode=om.readTree(jsonPatch);
+		jsonPatch = jsonPatch.replaceAll("\n", "").replaceAll("\r", "");
+		// System.out.println("----------------------------------------------------------------------------");
+		// System.out.println(jsonPatch);
+		List<JPOP> Ops = om.readValue(jsonPatch, new TypeReference<List<JPOP>>() {
+		});
+		Map<String, List<JPOP>> nestedOpMap = new HashMap<String, List<JPOP>>();
 		for (JPOP jpop : Ops) {
-			if(jpop.getFollow()!=null && jpop.getFollow().trim().length()>0) {
-				List<JPOP> list=nestedOpMap.get(jpop.getFollow());
-				if(list==null)
-					list=new ArrayList<JPOP>();
+			if (jpop.getFollow() != null && jpop.getFollow().trim().length() > 0) {
+				List<JPOP> list = nestedOpMap.get(jpop.getFollow());
+				if (list == null)
+					list = new ArrayList<JPOP>();
 				list.add(jpop);
 				nestedOpMap.put(jpop.getFollow(), list);
 			}
 		}
 		for (JPOP jpop : Ops) {
-			if(jpop.getFollow().trim().length()<=0)
-				jnTarget = JsonPatcher.apply(jpop, jnTarget,nestedOpMap);
+			if (jpop.getFollow().trim().length() <= 0)
+				jnTarget = JsonPatcher.apply(jpop, jnTarget, nestedOpMap);
 		}
 		return jnTarget;
 	}
 
 	private static void loadJsonData(Tree tree, TreeItem ti[], String schema, Map<String, Integer> columnNameIndexMap,
-			String payload,boolean isEditable,String mainSchema) {
+			String payload, boolean isEditable, String mainSchema) {
 		try {
-			int counter=0;
+			int counter = 0;
 			TreeItem treeItems[] = ti;
 			if (ti == null)
 				treeItems = tree.getItems();
-			//System.out.println("Number of elements to be populated: "+treeItems.length);
+			// System.out.println("Number of elements to be populated: "+treeItems.length);
 			for (TreeItem treeItem : treeItems) {
-				if(counter++>MAX_ELEMENTS && MAX_ELEMENTS>0) {
-					//System.out.println("-------------------Break-----------------------");
+				if (counter++ > MAX_ELEMENTS && MAX_ELEMENTS > 0) {
+					// System.out.println("-------------------Break-----------------------");
 					break;
 				}
 				String type = treeItem.getText(columnNameIndexMap.get("Type"));
 				boolean isEligible = isEligible(treeItem, columnNameIndexMap);
-				
-				
-				Runnable run=new Runnable() {
-					
+
+				Runnable run = new Runnable() {
+
 					@Override
 					public void run() {
 						try {
-							//System.out.println(".");
-						if (type.toLowerCase().contains("array<") && isEligible) {
-							//System.out.println("-");
-							addJsonData(tree, treeItem, schema, columnNameIndexMap, payload,isEditable,mainSchema);
-							//System.out.println("+");
-							loadJsonData(tree, treeItem.getItems(), schema, columnNameIndexMap, payload,isEditable,mainSchema);
-							//System.out.println("=");
-						} else if (type.toLowerCase().equals("object")) {
-							//System.out.println("++");
-							loadJsonData(tree, treeItem.getItems(), schema, columnNameIndexMap, payload,isEditable,mainSchema);
-							//System.out.println("==");
-						}
-						else {
-							if (payload != null && isEligible) {
-								String val = "";
-								ObjectMapper om = new ObjectMapper();
-								JsonNode node = om.readTree(payload);
-								String xPath = getXPathForJson(treeItem, columnNameIndexMap.get("Name"));
-								//System.out.println("Payload xPath:---------------------\n" + xPath);
-								//String type=treeItem.getText(columnNameIndexMap.get("Type")).toLowerCase();
-								if (node != null) {
-									node = node.at(xPath);
-									if(type.toLowerCase().contains("integer"))
-										val = node.asLong(0)+"";
-									else if(type.toLowerCase().contains("number"))
-										val = node.asDouble(0.00)+"";
-									else
-										val = node.textValue();
-									if (val != null)
-										treeItem.setText(columnNameIndexMap.get("Value"), val);
-								} else
-									System.out.println("Node not found");
+							// System.out.println(".");
+							if (type.toLowerCase().contains("array<") && isEligible) {
+								// System.out.println("-");
+								addJsonData(tree, treeItem, schema, columnNameIndexMap, payload, isEditable,
+										mainSchema);
+								// System.out.println("+");
+								loadJsonData(tree, treeItem.getItems(), schema, columnNameIndexMap, payload, isEditable,
+										mainSchema);
+								// System.out.println("=");
+							} else if (type.toLowerCase().equals("object")) {
+								// System.out.println("++");
+								loadJsonData(tree, treeItem.getItems(), schema, columnNameIndexMap, payload, isEditable,
+										mainSchema);
+								// System.out.println("==");
+							} else {
+								if (payload != null && isEligible) {
+									String val = "";
+									ObjectMapper om = new ObjectMapper();
+									JsonNode node = om.readTree(payload);
+									String xPath = getXPathForJson(treeItem, columnNameIndexMap.get("Name"));
+									// System.out.println("Payload xPath:---------------------\n" + xPath);
+									// String type=treeItem.getText(columnNameIndexMap.get("Type")).toLowerCase();
+									if (node != null) {
+										node = node.at(xPath);
+										if (type.toLowerCase().contains("integer"))
+											val = node.asLong(0) + "";
+										else if (type.toLowerCase().contains("number"))
+											val = node.asDouble(0.00) + "";
+										else
+											val = node.textValue();
+										if (val != null)
+											treeItem.setText(columnNameIndexMap.get("Value"), val);
+									} else
+										System.out.println("Node not found");
+								}
 							}
-						}
-						}catch (Exception e) {
+						} catch (Exception e) {
 							e.printStackTrace();
 						}
 					}
 				};
 				Display.getDefault().asyncExec(run);
-				
+
 			}
 		} catch (Exception e) {
 			new ErrorDialogBox(tree.getShell(), tree.getShell().getStyle()).open(e);
@@ -576,7 +583,7 @@ public class CommonUtils {
 	}
 
 	public static void enableJsonEditor(Tree tree, TreeItem ti[], String schema,
-			Map<String, Integer> columnNameIndexMap, String payload, boolean isEditable,String mainSchema) {
+			Map<String, Integer> columnNameIndexMap, String payload, boolean isEditable, String mainSchema) {
 		try {
 			TreeItem treeItems[] = ti;
 			if (ti == null)
@@ -595,7 +602,8 @@ public class CommonUtils {
 					btnAddElement.addSelectionListener(new SelectionAdapter() {
 						@Override
 						public void widgetSelected(SelectionEvent e) {
-							addJsonArrayElement(tree, treeItem, schema, columnNameIndexMap, payload,isEditable,mainSchema);
+							addJsonArrayElement(tree, treeItem, schema, columnNameIndexMap, payload, isEditable,
+									mainSchema);
 							tree.deselectAll();
 						}
 					});
@@ -613,16 +621,18 @@ public class CommonUtils {
 						}
 					});
 					editor.setEditor(btnAddElement, treeItem, 2);
-					enableJsonEditor(tree, treeItem.getItems(), schema, columnNameIndexMap, payload,isEditable,mainSchema);
+					enableJsonEditor(tree, treeItem.getItems(), schema, columnNameIndexMap, payload, isEditable,
+							mainSchema);
 				} else if (type.toLowerCase().equals("object")) {
-					enableJsonEditor(tree, treeItem.getItems(), schema, columnNameIndexMap, payload,isEditable,mainSchema);
+					enableJsonEditor(tree, treeItem.getItems(), schema, columnNameIndexMap, payload, isEditable,
+							mainSchema);
 				} else {
 					if (payload != null && isEligible) {
 						String val = "";
 						ObjectMapper om = new ObjectMapper();
 						JsonNode node = om.readTree(payload);
 						String xPath = getXPathForJson(treeItem, columnNameIndexMap.get("Name"));
-						//System.out.println("Payload xPath:---------------------\n" + xPath);
+						// System.out.println("Payload xPath:---------------------\n" + xPath);
 						if (node != null) {
 							node = node.at(xPath);
 							val = node.textValue();
@@ -645,24 +655,25 @@ public class CommonUtils {
 		jsonPayload = jsonPayload.replace(",END-OF-JSON-####-##-####", "").replace("END-OF-JSON-####-##-####", "");
 		return jsonPayload;
 	}
-	
+
 	public static String generateJsonSchema(Tree tree, Map<String, Integer> columnNameIndexMap) {
-		if(tree.getItemCount()<=0)
+		if (tree.getItemCount() <= 0)
 			return "";
-		jsonWorkspace="";
-		appendln("{");		
+		jsonWorkspace = "";
+		appendln("{");
 		appendln("\"$schema\": \"http://json-schema.org/draft-04/schema#\",");
 		appendln("\"type\": \"object\", ");
 		appendln("\"properties\": {");
-		String json=jsonWorkspace;
-		jsonWorkspace="";
-		json+=generateJSchema(tree, null, columnNameIndexMap)+"}}";
-		json=json.replaceAll(","+identifier, "").replaceAll(identifier, "");
+		String json = jsonWorkspace;
+		jsonWorkspace = "";
+		json += generateJSchema(tree, null, columnNameIndexMap) + "}}";
+		json = json.replaceAll("," + identifier, "").replaceAll(identifier, "");
 		return json;
 	}
-	
-	public static TreeItem generateAPIDefaults(Tree tree,String rootName,String payloadRootName,Map<String, Integer> columnNameIndexMap) {
-		if(tree.getItemCount()>0)
+
+	public static TreeItem generateAPIDefaults(Tree tree, String rootName, String payloadRootName,
+			Map<String, Integer> columnNameIndexMap) {
+		if (tree.getItemCount() > 0)
 			return null;
 		TreeItem item = new TreeItem(tree, SWT.FULL_SELECTION);
 		item.setText(columnNameIndexMap.get("Name"), rootName);
@@ -672,33 +683,33 @@ public class CommonUtils {
 		item.setText(columnNameIndexMap.get("Type"), "object");
 		return item;
 	}
-	
-	private static String generateJSchema(Tree tree,TreeItem[] ti, Map<String, Integer> columnNameIndexMap) {
+
+	private static String generateJSchema(Tree tree, TreeItem[] ti, Map<String, Integer> columnNameIndexMap) {
 		TreeItem[] treeItems = ti;
-		if(ti==null)
+		if (ti == null)
 			treeItems = tree.getItems();
 		for (TreeItem treeItem : treeItems) {
-			String name=treeItem.getText(columnNameIndexMap.get("Name"));
-			String type=treeItem.getText(columnNameIndexMap.get("Type"));
-			boolean primitive=true;
-			if(type.contains("object"))
-				primitive=false;
-			if(primitive) {
-				if(type.contains("array")) {
-					appendln("\""+name+"\":{");
+			String name = treeItem.getText(columnNameIndexMap.get("Name"));
+			String type = treeItem.getText(columnNameIndexMap.get("Type"));
+			boolean primitive = true;
+			if (type.contains("object"))
+				primitive = false;
+			if (primitive) {
+				if (type.contains("array")) {
+					appendln("\"" + name + "\":{");
 					appendln("\"type\" : \"array\",");
 					appendln("\"items\": [{");
-					appendln("\"type\" : \""+type.replace("array<", "").replace(">", "")+"\"");
+					appendln("\"type\" : \"" + type.replace("array<", "").replace(">", "") + "\"");
 					appendln("}]");
 					append("},");
-				}else {
-					appendln("\""+name+"\":{");
-					appendln("\"type\" : \""+type+"\"");
+				} else {
+					appendln("\"" + name + "\":{");
+					appendln("\"type\" : \"" + type + "\"");
 					append("},");
 				}
-			}else {
-				if(type.contains("array<")) {
-					appendln("\""+name+"\":{");
+			} else {
+				if (type.contains("array<")) {
+					appendln("\"" + name + "\":{");
 					appendln("\"type\":\"array\",");
 					appendln("\"items\": {");
 					appendln("\"type\":\"object\",");
@@ -707,8 +718,8 @@ public class CommonUtils {
 					appendln("}");
 					appendln("}");
 					append("},");
-				}else {
-					appendln("\""+name+"\":{");
+				} else {
+					appendln("\"" + name + "\":{");
 					appendln("\"type\":\"object\",");
 					appendln("\"properties\":{");
 					appendln(generateJSchema(tree, treeItem.getItems(), columnNameIndexMap));
@@ -716,231 +727,253 @@ public class CommonUtils {
 					append("},");
 				}
 			}
-			
+
 		}
 		appendln(identifier);
-		String tempJson=jsonWorkspace;
-		jsonWorkspace="";
+		String tempJson = jsonWorkspace;
+		jsonWorkspace = "";
 		return tempJson;
 	}
-	
-	
+
 	public static void setJsonPointerValue(ObjectNode node, JsonPointer pointer, JsonNode value, ObjectMapper mapper) {
-	    JsonPointer parentPointer = pointer.head();
-	    JsonNode parentNode = node.at(parentPointer);
-	    String fieldName = pointer.last().toString().substring(1);
+		JsonPointer parentPointer = pointer.head();
+		JsonNode parentNode = node.at(parentPointer);
+		String fieldName = pointer.last().toString().substring(1);
 
-	    if (parentNode.isMissingNode() || parentNode.isNull()) {
-	        parentNode = StringUtils.isNumeric(fieldName) ? mapper.createArrayNode() : mapper.createObjectNode();
-	        setJsonPointerValue(null,parentPointer, parentNode,mapper); // recursively reconstruct hierarchy
-	    }
+		if (parentNode.isMissingNode() || parentNode.isNull()) {
+			parentNode = StringUtils.isNumeric(fieldName) ? mapper.createArrayNode() : mapper.createObjectNode();
+			setJsonPointerValue(null, parentPointer, parentNode, mapper); // recursively reconstruct hierarchy
+		}
 
-	    if (parentNode.isArray()) {
-	        ArrayNode arrayNode = (ArrayNode) parentNode;
-	        int index = Integer.valueOf(fieldName);
-	        // expand array in case index is greater than array size (like JavaScript does)
-	        for (int i = arrayNode.size(); i <= index; i++) {
-	            arrayNode.addNull();
-	        }
-	        arrayNode.set(index, value);
-	    } else if (parentNode.isObject()) {
-	        ((ObjectNode) parentNode).set(fieldName, value);
-	    } else {
-	        throw new IllegalArgumentException("`" + fieldName + "` can't be set for parent node `"
-	                + parentPointer + "` because parent is not a container but " + parentNode.getNodeType().name());
-	    }
+		if (parentNode.isArray()) {
+			ArrayNode arrayNode = (ArrayNode) parentNode;
+			int index = Integer.valueOf(fieldName);
+			// expand array in case index is greater than array size (like JavaScript does)
+			for (int i = arrayNode.size(); i <= index; i++) {
+				arrayNode.addNull();
+			}
+			arrayNode.set(index, value);
+		} else if (parentNode.isObject()) {
+			((ObjectNode) parentNode).set(fieldName, value);
+		} else {
+			throw new IllegalArgumentException("`" + fieldName + "` can't be set for parent node `" + parentPointer
+					+ "` because parent is not a container but " + parentNode.getNodeType().name());
+		}
 	}
-	
-	public static ClassMetaData generateClasses(Tree requestDocTree, Tree responseDocTree, Text pacakgeName, Text importedPackages,
-			Text serviceImplementation, Text servicePrivateCode, String operationName, ClassMetaData cls,Map<String, Integer> columnNameIndexMap,CodeGen CG) throws Exception {
-		
+
+	public static ClassMetaData generateClasses(Tree requestDocTree, Tree responseDocTree, Text pacakgeName,
+			Text importedPackages, Text serviceImplementation, Text servicePrivateCode, String operationName,
+			ClassMetaData cls, Map<String, Integer> columnNameIndexMap, CodeGen CG) throws Exception {
+
 		Map<String, ClassMetaData> classes;
-		TreeItem[] requestDoc=requestDocTree.getItems();
-		TreeItem[] responseDoc=responseDocTree.getItems();
-			ClassMetaData service=createRoot(operationName, requestDoc, responseDoc,cls,CG,columnNameIndexMap);
-			API api=service.getAPI();
-			api.code=Base64.getEncoder().encodeToString(serviceImplementation.getText().getBytes());
-			api.imports=Base64.getEncoder().encodeToString(importedPackages.getText().getBytes());
-			api.custom=Base64.getEncoder().encodeToString(servicePrivateCode.getText().getBytes());
-			classes=CG.classes;
-			geneateFunction(classes, service,operationName);
-			return service;
+		TreeItem[] requestDoc = requestDocTree.getItems();
+		TreeItem[] responseDoc = responseDocTree.getItems();
+		ClassMetaData service = createRoot(operationName, requestDoc, responseDoc, cls, CG, columnNameIndexMap);
+		API api = service.getAPI();
+		api.code = Base64.getEncoder().encodeToString(serviceImplementation.getText().getBytes());
+		api.imports = Base64.getEncoder().encodeToString(importedPackages.getText().getBytes());
+		api.custom = Base64.getEncoder().encodeToString(servicePrivateCode.getText().getBytes());
+		classes = CG.classes;
+		geneateFunction(classes, service, operationName);
+		return service;
 	}
-	
-	private static void newSchema(TreeItem treeItem,int pad,ClassMetaData cls,Map<String, Integer> columnNameIndexMap,CodeGen CG) throws Exception{
-		TreeItem items[]=items=treeItem.getItems();	
+
+	private static void newSchema(TreeItem treeItem, int pad, ClassMetaData cls,
+			Map<String, Integer> columnNameIndexMap, CodeGen CG) throws Exception {
+		TreeItem items[] = items = treeItem.getItems();
 		for (TreeItem item : items) {
-			processItem(item,pad,cls,columnNameIndexMap,CG);
+			processItem(item, pad, cls, columnNameIndexMap, CG);
 		}
 	}
-	
-	private static void processItem(TreeItem item,int pad,ClassMetaData cls,Map<String, Integer> columnNameIndexMap, CodeGen CG) throws Exception{
-		String type=item.getText(columnNameIndexMap.get("Type"));//type of object
-		String clsName=item.getText(columnNameIndexMap.get("Name"));	
-		if(type.equalsIgnoreCase("object")) {
-			if(cls==null) {
-				cls=CG.createEntityClass(clsName,"Local",clsName);
-			}else {
-				Property prop=cls.addProperty("private",clsName, clsName.toLowerCase(),false);
-				cls=CG.createEntityClass(clsName,"Local",cls.getRoot()+"."+clsName);
+
+	private static void processItem(TreeItem item, int pad, ClassMetaData cls, Map<String, Integer> columnNameIndexMap,
+			CodeGen CG) throws Exception {
+		String type = item.getText(columnNameIndexMap.get("Type"));// type of object
+		String clsName = item.getText(columnNameIndexMap.get("Name"));
+		if (type.equalsIgnoreCase("object")) {
+			if (cls == null) {
+				cls = CG.createEntityClass(clsName, "Local", clsName);
+			} else {
+				Property prop = cls.addProperty("private", clsName, clsName.toLowerCase(), false);
+				cls = CG.createEntityClass(clsName, "Local", cls.getRoot() + "." + clsName);
 			}
-    		newSchema(item, pad+2,cls,columnNameIndexMap,CG);
-		}
-		else if(type.toLowerCase().contains("array")) {
-			//String clsName=item.getText(columnNameIndexMap.get("Name"));
-			String subType=type.toLowerCase().replace("array<", "").replace(">", "");
-			if(subType.equalsIgnoreCase("object")) {
-				if(cls==null) {
-					cls=CG.createEntityClass(clsName,"Local",clsName);
-				}
-				else {
+			newSchema(item, pad + 2, cls, columnNameIndexMap, CG);
+		} else if (type.toLowerCase().contains("array")) {
+			// String clsName=item.getText(columnNameIndexMap.get("Name"));
+			String subType = type.toLowerCase().replace("array<", "").replace(">", "");
+			if (subType.equalsIgnoreCase("object")) {
+				if (cls == null) {
+					cls = CG.createEntityClass(clsName, "Local", clsName);
+				} else {
 					cls.addImport("import java.util.List;");
-					Property prop=cls.addProperty("private","List<"+clsName+">", CodeGen.getPlural(clsName.toLowerCase()),false);
-					cls=CG.createEntityClass(clsName,"Local",cls.getRoot()+"."+clsName);
+					Property prop = cls.addProperty("private", "List<" + clsName + ">",
+							CommonUtils.getPlural(clsName.toLowerCase()), false);
+					cls = CG.createEntityClass(clsName, "Local", cls.getRoot() + "." + clsName);
 				}
-			}else {
-				if(cls==null) {
-					cls=CG.createEntityClass(clsName,"Local",clsName);
-					Property prop=null;
-					if(subType.equalsIgnoreCase("string"))
-						prop=cls.addProperty("private ","String[]", CodeGen.getPlural(clsName.toLowerCase()),true);
+			} else {
+				if (cls == null) {
+					cls = CG.createEntityClass(clsName, "Local", clsName);
+					Property prop = null;
+					if (subType.equalsIgnoreCase("string"))
+						prop = cls.addProperty("private ", "String[]", CommonUtils.getPlural(clsName.toLowerCase()), true);
 					else
-						prop=cls.addProperty("private ",subType+"[]", CodeGen.getPlural(clsName.toLowerCase()),true);
-				}
-				else {
-					Property prop=null;
-					if(subType.equalsIgnoreCase("string"))
-						prop=cls.addProperty("private ","String[]", CodeGen.getPlural(clsName.toLowerCase()),true);
+						prop = cls.addProperty("private ", subType + "[]", CommonUtils.getPlural(clsName.toLowerCase()),
+								true);
+				} else {
+					Property prop = null;
+					if (subType.equalsIgnoreCase("string"))
+						prop = cls.addProperty("private ", "String[]", CommonUtils.getPlural(clsName.toLowerCase()), true);
 					else
-						prop=cls.addProperty("private ",subType+"[]", CodeGen.getPlural(clsName.toLowerCase()),true);
-					cls=CG.createEntityClass(clsName,"Local",cls.getRoot()+"."+clsName);
+						prop = cls.addProperty("private ", subType + "[]", CommonUtils.getPlural(clsName.toLowerCase()),
+								true);
+					cls = CG.createEntityClass(clsName, "Local", cls.getRoot() + "." + clsName);
 				}
 			}
-			newSchema(item, pad+3,cls,columnNameIndexMap,CG);
-		}
-		else {
-			Property prop=null;
-			if(type.equalsIgnoreCase("string"))
-				prop=cls.addProperty("private ","String ", (clsName.toLowerCase()),true);
+			newSchema(item, pad + 3, cls, columnNameIndexMap, CG);
+		} else {
+			Property prop = null;
+			if (type.equalsIgnoreCase("string"))
+				prop = cls.addProperty("private ", "String ", (clsName.toLowerCase()), true);
 			else
-				prop=cls.addProperty("private ",type+" ", (clsName.toLowerCase()),true);
+				prop = cls.addProperty("private ", type + " ", (clsName.toLowerCase()), true);
 		}
 	}
-	
-	private static ClassMetaData createRoot(String name,TreeItem[] requestDoc,TreeItem[] responseDoc, ClassMetaData cls, CodeGen CG,Map<String, Integer> columnNameIndexMap) throws Exception{
-		//String apiMethod=type.toLowerCase().replace("api<", "").replace(">", "");
-	int pad=1;
-	//String type="object";
-		String clsName=name;
-		cls=CG.createAPIClass(clsName);
-		API api=cls.getAPI();
-		api.method="GET";
+
+	private static ClassMetaData createRoot(String name, TreeItem[] requestDoc, TreeItem[] responseDoc,
+			ClassMetaData cls, CodeGen CG, Map<String, Integer> columnNameIndexMap) throws Exception {
+		// String apiMethod=type.toLowerCase().replace("api<", "").replace(">", "");
+		int pad = 1;
+		// String type="object";
+		String clsName = name;
+		cls = CG.createAPIClass(clsName);
+		API api = cls.getAPI();
+		api.method = "GET";
 		cls.setScope("Global");
-		if(requestDoc!=null)
-		for (TreeItem item : requestDoc) {
-			processItem(item,pad,cls,columnNameIndexMap,CG);
-		}
-		if(responseDoc!=null)
-		for (TreeItem item : responseDoc) {
-			processItem(item,pad,cls,columnNameIndexMap,CG);
-		}
+		if (requestDoc != null)
+			for (TreeItem item : requestDoc) {
+				processItem(item, pad, cls, columnNameIndexMap, CG);
+			}
+		if (responseDoc != null)
+			for (TreeItem item : responseDoc) {
+				processItem(item, pad, cls, columnNameIndexMap, CG);
+			}
 		return cls;
-}
-	
-	private static void geneateFunction(Map<String, ClassMetaData> classes,ClassMetaData clazz,String resourcePath) throws Exception {
-		ClassMetaData resource=classes.get(clazz.getName()+"Resource");
-		API api=clazz.getAPI();
-		Set<String> imports=api.getImportList();
-		if(imports!=null)
-		for (String imprt : imports) {
-			resource.addImport(imprt);
-		}
-		
-		//resource.addProperty(access, type, name, primitive)
-		ClassMetaData payload=classes.get(clazz.getName()+".Payload");
-		String requestBody="@RequestBody(required = false)";
-		Function apiActionImpl=null;
-		Function functionJsonWrapper=null;
-		if((payload.getProperty("requestpayloads")!=null && payload.getProperty("requestpayloads").required) || (payload.getProperty("requestpayload")!=null && payload.getProperty("requestpayload").required))
-			requestBody="@RequestBody(required = true)";
-		if(payload.getProperty("responsepayload")!=null) {
-			apiActionImpl=resource.addFunction("public", "ResponsePayload", clazz.getName().toLowerCase());
-			functionJsonWrapper=resource.addFunction("public", "String", clazz.getName().toLowerCase()+"Wrapper");
-		}
-		else {
-			apiActionImpl=resource.addFunction("public", "List<ResponsePayload>", clazz.getName().toLowerCase()+"s");
-			functionJsonWrapper=resource.addFunction("public", "String", clazz.getName().toLowerCase()+"s");
+	}
+
+	public static String getPlural(String word) {
+		Inflector inf = Inflector.getInstance();
+		return inf.pluralize(word);
+	}
+
+	public static String getSingular(String word) {
+		Inflector inf = Inflector.getInstance();
+		return inf.singularize(word);
+	}
+
+	private static void geneateFunction(Map<String, ClassMetaData> classes, ClassMetaData clazz, String resourcePath)
+			throws Exception {
+		ClassMetaData resource = classes.get(clazz.getName() + "Resource");
+		API api = clazz.getAPI();
+		Set<String> imports = api.getImportList();
+		if (imports != null)
+			for (String imprt : imports) {
+				resource.addImport(imprt);
+			}
+
+		// resource.addProperty(access, type, name, primitive)
+		ClassMetaData payload = classes.get(clazz.getName() + ".Payload");
+		String requestBody = "@RequestBody(required = false)";
+		Function apiActionImpl = null;
+		Function functionJsonWrapper = null;
+		if ((payload.getProperty("requestpayloads") != null && payload.getProperty("requestpayloads").required)
+				|| (payload.getProperty("requestpayload") != null && payload.getProperty("requestpayload").required))
+			requestBody = "@RequestBody(required = true)";
+		if (payload.getProperty("responsepayload") != null) {
+			apiActionImpl = resource.addFunction("public", "ResponsePayload", clazz.getName().toLowerCase());
+			functionJsonWrapper = resource.addFunction("public", "String", clazz.getName().toLowerCase() + "Wrapper");
+		} else {
+			apiActionImpl = resource.addFunction("public", "List<ResponsePayload>",
+					clazz.getName().toLowerCase() + "s");
+			functionJsonWrapper = resource.addFunction("public", "String", clazz.getName().toLowerCase() + "s");
 		}
 		functionJsonWrapper.addParam("", "String", "jsonPayload");
 		functionJsonWrapper.exceptions.add("Exception");
-		
-		if(payload.getProperty("requestpayload")!=null)
-			apiActionImpl.addParam(requestBody,"RequestPayload" , "requestPayload");
+
+		if (payload.getProperty("requestpayload") != null)
+			apiActionImpl.addParam(requestBody, "RequestPayload", "requestPayload");
 		else
-			apiActionImpl.addParam(requestBody,"List<RequestPayload>" , "requestPayloads");
-		String method=api.method.toLowerCase();
-		method=method.substring(0, 1).toUpperCase()+method.substring(1);
-		List<Property> queryStringProps= clazz.getProperties();
-		ClassMetaData requestheaders=classes.get(clazz.getRoot()+".Headers"+"."+"RequestHeaders");
-		
-		if(requestheaders!=null) {
-		List<Property> properties=requestheaders.getProperties();
-		if(properties!=null && properties.size()>0) {
-			resource.addImport("import org.springframework.web.bind.annotation.RequestHeader;");
-			requestheaders.addAnnotation("@AllArgsConstructor");
-			requestheaders.addImport("import lombok.AllArgsConstructor;");
-			requestheaders.addAnnotation("@NoArgsConstructor");
-			requestheaders.addImport("import lombok.NoArgsConstructor;");
-			for (Property property : properties) {
-				apiActionImpl.addParam("@RequestHeader(\""+property.name+"\")", property.type, property.name);
+			apiActionImpl.addParam(requestBody, "List<RequestPayload>", "requestPayloads");
+		String method = api.method.toLowerCase();
+		method = method.substring(0, 1).toUpperCase() + method.substring(1);
+		List<Property> queryStringProps = clazz.getProperties();
+		ClassMetaData requestheaders = classes.get(clazz.getRoot() + ".Headers" + "." + "RequestHeaders");
+
+		if (requestheaders != null) {
+			List<Property> properties = requestheaders.getProperties();
+			if (properties != null && properties.size() > 0) {
+				resource.addImport("import org.springframework.web.bind.annotation.RequestHeader;");
+				requestheaders.addAnnotation("@AllArgsConstructor");
+				requestheaders.addImport("import lombok.AllArgsConstructor;");
+				requestheaders.addAnnotation("@NoArgsConstructor");
+				requestheaders.addImport("import lombok.NoArgsConstructor;");
+				for (Property property : properties) {
+					apiActionImpl.addParam("@RequestHeader(\"" + property.name + "\")", property.type, property.name);
+				}
 			}
 		}
-		}
-		//@PostMapping(path = "/entrys",params= {"projectId","timesheetId"})
-		//@RequestParam long timesheetId
-		//@PathVariable long id
-		String params="";
+		// @PostMapping(path = "/entrys",params= {"projectId","timesheetId"})
+		// @RequestParam long timesheetId
+		// @PathVariable long id
+		String params = "";
 		functionJsonWrapper.codeLines.add("ObjectMapper om=new ObjectMapper();");
 		functionJsonWrapper.codeLines.add("om.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);");
-		functionJsonWrapper.codeLines.add("RequestPayload req=om.readValue(jsonPayload.getBytes(), RequestPayload.class);");
-		functionJsonWrapper.codeLines.add("String ret=om.writeValueAsString("+apiActionImpl.name+"(req));");
+		functionJsonWrapper.codeLines
+				.add("RequestPayload req=om.readValue(jsonPayload.getBytes(), RequestPayload.class);");
+		functionJsonWrapper.codeLines.add("String ret=om.writeValueAsString(" + apiActionImpl.name + "(req));");
 		functionJsonWrapper.codeLines.add("return ret;");
 		resource.addImport("import com.fasterxml.jackson.databind.ObjectMapper;");
 		resource.addImport("import com.fasterxml.jackson.databind.MapperFeature;");
-		
-		api.path=resourcePath;//.replace(";", newChar);
-		
-		apiActionImpl.annotations.add("@"+method+"Mapping(path=\""+api.path+"\")");
+
+		api.path = resourcePath;// .replace(";", newChar);
+
+		apiActionImpl.annotations.add("@" + method + "Mapping(path=\"" + api.path + "\")");
 		apiActionImpl.codeLines.add(new String(Base64.getDecoder().decode(api.code)));
 		resource.setCustomCode(new String(Base64.getDecoder().decode(api.custom)));
 	}
+
 	private static String jsonWorkspace;
-	private static final String identifier="-~-~-~-010-~-~-~";
+	private static final String identifier = "-~-~-~-010-~-~-~";
+
 	private static void appendln(String data) {
-		jsonWorkspace+=data+"\n";
-		//System.out.println(data.replaceAll(","+identifier, "").replaceAll(identifier, ""));
+		jsonWorkspace += data + "\n";
+		// System.out.println(data.replaceAll(","+identifier, "").replaceAll(identifier,
+		// ""));
 	}
+
 	private static void append(String data) {
-		jsonWorkspace+=data;
-		//System.out.println(data.replaceAll(","+identifier, "").replaceAll(identifier, ""));
+		jsonWorkspace += data;
+		// System.out.println(data.replaceAll(","+identifier, "").replaceAll(identifier,
+		// ""));
 	}
-	private static String generateSchema(ClassMetaData service, Map<String, ClassMetaData> classes, String opetrationName) {
-		API api=service.getAPI();
-		appendln("{");		
+
+	private static String generateSchema(ClassMetaData service, Map<String, ClassMetaData> classes,
+			String opetrationName) {
+		API api = service.getAPI();
+		appendln("{");
 		appendln("\"$schema\": \"http://json-schema.org/draft-04/schema#\",");
-		appendln("\"import\": \""+api.imports+"\", ");
-		appendln("\"code\": \""+api.code+"\", ");
-		appendln("\"custom\": \""+api.custom+"\", ");
-		appendln("\"operation\": \""+opetrationName+"\", ");
+		appendln("\"import\": \"" + api.imports + "\", ");
+		appendln("\"code\": \"" + api.code + "\", ");
+		appendln("\"custom\": \"" + api.custom + "\", ");
+		appendln("\"operation\": \"" + opetrationName + "\", ");
 		appendln("\"type\": \"object\", ");
-		
+
 		appendln("\"properties\": {");
 		appendln(service.toJsonSchema(classes));
 		appendln("}");
 		appendln("}");
-		jsonWorkspace=jsonWorkspace.replaceAll(","+identifier, "").replaceAll(identifier, "");
-		String temp=jsonWorkspace;
-		jsonWorkspace="";
+		jsonWorkspace = jsonWorkspace.replaceAll("," + identifier, "").replaceAll(identifier, "");
+		String temp = jsonWorkspace;
+		jsonWorkspace = "";
 		return temp;
 	}
 
@@ -949,11 +982,11 @@ public class CommonUtils {
 		for (TreeItem item : treeItems) {
 			String type = item.getText(columnNameIndexMap.get("Type"));
 			String name = item.getText(columnNameIndexMap.get("Name"));
-			//System.out.println("Type:"+type+" and Name: "+name);
+			// System.out.println("Type:"+type+" and Name: "+name);
 			if (type.contains("array<object>")) {
 				String payload = generateJsonPayload(item.getItems(), columnNameIndexMap);
-				if(!payload.startsWith("{"))
-					payload="{"+payload+"}";
+				if (!payload.startsWith("{"))
+					payload = "{" + payload + "}";
 				payload = "\"" + name + "\":[" + payload + "],";
 				jsonPayload += payload;
 			} else if (type.contains("array<")) {
@@ -972,8 +1005,8 @@ public class CommonUtils {
 					payload = "\"" + name + "\":{" + payload + "},";
 				jsonPayload += payload;
 			} else {
-				//System.out.println("Value index: "+columnNameIndexMap.get("Value"));
-				//System.out.println("Value: "+item.getText(columnNameIndexMap.get("Value")));
+				// System.out.println("Value index: "+columnNameIndexMap.get("Value"));
+				// System.out.println("Value: "+item.getText(columnNameIndexMap.get("Value")));
 				String payload = "\"" + name + "\":\"" + item.getText(columnNameIndexMap.get("Value")) + "\",";
 				jsonPayload += payload;
 			}
@@ -981,47 +1014,49 @@ public class CommonUtils {
 		jsonPayload += "END-OF-JSON-####-##-####";
 		return jsonPayload;
 	}
-	
+
 	public static String decodeBase64(String string) {
-		if(string==null)
+		if (string == null)
 			return "";
-		   try {
-			   return new String(Base64.getDecoder().decode(string));
-		    } catch(Exception e) { 
-		    	e.printStackTrace();
-		    	return string;
-		    }
+		try {
+			return new String(Base64.getDecoder().decode(string));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return string;
 		}
+	}
+
 	public static String encodeBase64(String data) {
 		try {
-		return Base64.getEncoder().encodeToString(data.getBytes());
-		}catch (Exception e) {
+			return Base64.getEncoder().encodeToString(data.getBytes());
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return data;
 	}
-	
-	public static TreeItem geTreeItemAt(String xPath,Tree tree) {
-		TreeItem ti[]=tree.getItems();
-		String elem[]=xPath.replace("/0", "").replace("/*", "").split(Pattern.quote("/"));
-		TreeItem item=null;
-		int loc=1;
-		item=at(ti, elem,loc);
+
+	public static TreeItem geTreeItemAt(String xPath, Tree tree) {
+		TreeItem ti[] = tree.getItems();
+		String elem[] = xPath.replace("/0", "").replace("/*", "").split(Pattern.quote("/"));
+		TreeItem item = null;
+		int loc = 1;
+		item = at(ti, elem, loc);
 		return item;
 	}
-	
+
 	private static TreeItem at(TreeItem ti[], String elem[], int loc) {
-		if(ti==null || ti.length==0)
+		if (ti == null || ti.length == 0)
 			return null;
-		TreeItem item=null;
+		TreeItem item = null;
 		for (TreeItem treeItem : ti) {
-			//System.out.println("Looking for elem: "+loc+", Length: "+elem.length+", Last elem:"+elem[elem.length-1]);
-			if(treeItem.getText(0).equalsIgnoreCase(elem[loc])) {
-				//System.out.println("Tree Item("+loc+"): "+treeItem.getText(0));
-				if(loc==elem.length-1) 
-					return treeItem;			
+			// System.out.println("Looking for elem: "+loc+", Length: "+elem.length+", Last
+			// elem:"+elem[elem.length-1]);
+			if (treeItem.getText(0).equalsIgnoreCase(elem[loc])) {
+				// System.out.println("Tree Item("+loc+"): "+treeItem.getText(0));
+				if (loc == elem.length - 1)
+					return treeItem;
 				else {
-					item=at(treeItem.getItems(), elem,loc+1);
+					item = at(treeItem.getItems(), elem, loc + 1);
 					break;
 				}
 			}
@@ -1044,8 +1079,8 @@ public class CommonUtils {
 		}
 		return selected;
 	}
-	
-	public static String saveFileDialog(Shell shell,String filename) {
+
+	public static String saveFileDialog(Shell shell, String filename) {
 		String selected = null;
 		try {
 			FileDialog fd = new FileDialog(shell, SWT.SAVE);
@@ -1061,102 +1096,96 @@ public class CommonUtils {
 		}
 		return selected;
 	}
-	
-	
-	
+
 	public static String resolveJavaType(String typ, String format) {
-		String javaType=null;
-		if(typ!=null)
-		switch (typ.trim()) {
-		case "string":
-			javaType="String";
-			if("date".equals(format))
-				javaType="java.util.Date";
-			break;
-		case "integer":
-			javaType="Integer";
-			break;
-		case "boolean":
-			javaType="boolean";
-			break;
-		default:
-			System.out.println("Type conversion requested for "+typ.trim());
-			javaType="Double";
-		}
+		String javaType = null;
+		if (typ != null)
+			switch (typ.trim()) {
+			case "string":
+				javaType = "String";
+				if ("date".equals(format))
+					javaType = "java.util.Date";
+				break;
+			case "integer":
+				javaType = "Integer";
+				break;
+			case "boolean":
+				javaType = "boolean";
+				break;
+			default:
+				System.out.println("Type conversion requested for " + typ.trim());
+				javaType = "Double";
+			}
 		return javaType;
 	}
-	
+
 	public static String resolveGetter(Property prop) {
-		String getter=".get";
-		if(prop!=null && prop.primitive && "boolean".equalsIgnoreCase(prop.type)) {
-			getter=".is";
+		String getter = ".get";
+		if (prop != null && prop.primitive && "boolean".equalsIgnoreCase(prop.type)) {
+			getter = ".is";
 		}
 		return getter;
 	}
-	
-	public static boolean evaluateCondition(String condition, JsonNode jn,ScriptEngine engine) throws Exception{
-		//System.out.println(condition);
-		String params[]=condition.split(Pattern.quote("}"));
+
+	public static boolean evaluateCondition(String condition, JsonNode jn, ScriptEngine engine) throws Exception {
+		// System.out.println(condition);
+		String params[] = condition.split(Pattern.quote("}"));
 		for (String param : params) {
-			if(param.contains("#{")) {
-				param=param.split(Pattern.quote("#{"))[1];//replace("#{", "");
-				JsonNode jnn=jn.at(param);
-				String value=jnn.asText();
-				if(jn.isTextual())
-					condition=condition.replace("#{"+param+"}", "'"+value+"'");//cond=evaluatedParam+"='"+value+"'";
+			if (param.contains("#{")) {
+				param = param.split(Pattern.quote("#{"))[1];// replace("#{", "");
+				JsonNode jnn = jn.at(param);
+				String value = jnn.asText();
+				if (jn.isTextual())
+					condition = condition.replace("#{" + param + "}", "'" + value + "'");// cond=evaluatedParam+"='"+value+"'";
 				else
-					condition=condition.replace("#{"+param+"}", value);//cond=evaluatedParam+"="+value;
+					condition = condition.replace("#{" + param + "}", value);// cond=evaluatedParam+"="+value;
 			}
 		}
 		return (boolean) engine.eval(condition);
 	}
-	
-	public static String placeXPathValue(String xPaths, JsonNode jn) throws Exception{
-		//System.out.println(xPaths);
-		String xPathValues=xPaths;
-		String params[]=xPaths.split(Pattern.quote("}"));
+
+	public static String placeXPathValue(String xPaths, JsonNode jn) throws Exception {
+		// System.out.println(xPaths);
+		String xPathValues = xPaths;
+		String params[] = xPaths.split(Pattern.quote("}"));
 		for (String param : params) {
-			if(param.contains("#{")) {
-				param=param.split(Pattern.quote("#{"))[1];//replace("#{", "");
-				JsonNode jnn=jn.at(param);
-				String value=jnn.asText();
-				if(jn.isTextual())
-					xPathValues=xPathValues.replace("#{"+param+"}", "'"+value+"'");//cond=evaluatedParam+"='"+value+"'";
+			if (param.contains("#{")) {
+				param = param.split(Pattern.quote("#{"))[1];// replace("#{", "");
+				JsonNode jnn = jn.at(param);
+				String value = jnn.asText();
+				if (jn.isTextual())
+					xPathValues = xPathValues.replace("#{" + param + "}", "'" + value + "'");// cond=evaluatedParam+"='"+value+"'";
 				else
-					xPathValues=xPathValues.replace("#{"+param+"}", value);//cond=evaluatedParam+"="+value;
+					xPathValues = xPathValues.replace("#{" + param + "}", value);// cond=evaluatedParam+"="+value;
 			}
 		}
 		return xPathValues;
 	}
-	
+
 	public static String toLowerFirst(String word) {
-		word=word.substring(0, 1).toLowerCase()+word.substring(1,word.length());
+		word = word.substring(0, 1).toLowerCase() + word.substring(1, word.length());
 		return word;
 	}
-	
+
 	public static String toUpperFirst(String word) {
-		word=word.substring(0, 1).toUpperCase()+word.substring(1,word.length());
+		word = word.substring(0, 1).toUpperCase() + word.substring(1, word.length());
 		return word;
 	}
-	
-public static void main1(String[] args) throws Exception{
-	String json="{\"meta\": {\r\n" + 
-			"    \"pagination\": {\r\n" + 
-			"      \"total\": 858,\r\n" + 
-			"      \"pages\": 43,\r\n" + 
-			"      \"limit\": 20,\r\n" + 
-			"      \"page\": 1\r\n" + 
-			"    }\r\n" + 
-			"  }}";
-	String condition="#{/meta/pagination/total}>#{/meta/pagination/limit} && #{/meta/pagination/total}<900";
-	ObjectMapper om=new ObjectMapper();
-	JsonNode jn=om.readTree(json);
-	ScriptEngineManager factory = new ScriptEngineManager();
-    ScriptEngine engine = factory.getEngineByName("JavaScript");
-    engine.eval("if(2==2)throw new Error(\"Error reported from ssdsdssdsd inside script\");");
-	//System.out.println(evaluateCondition(condition, jn,engine));
-}
-public static void main(String[] args) {
-	System.out.println(toLowerFirst("AccessPrivilages"));
-}
+
+	public static void main1(String[] args) throws Exception {
+		String json = "{\"meta\": {\r\n" + "    \"pagination\": {\r\n" + "      \"total\": 858,\r\n"
+				+ "      \"pages\": 43,\r\n" + "      \"limit\": 20,\r\n" + "      \"page\": 1\r\n" + "    }\r\n"
+				+ "  }}";
+		String condition = "#{/meta/pagination/total}>#{/meta/pagination/limit} && #{/meta/pagination/total}<900";
+		ObjectMapper om = new ObjectMapper();
+		JsonNode jn = om.readTree(json);
+		ScriptEngineManager factory = new ScriptEngineManager();
+		ScriptEngine engine = factory.getEngineByName("JavaScript");
+		engine.eval("if(2==2)throw new Error(\"Error reported from ssdsdssdsd inside script\");");
+		// System.out.println(evaluateCondition(condition, jn,engine));
+	}
+
+	public static void main(String[] args) {
+		System.out.println(toLowerFirst("AccessPrivilages"));
+	}
 }

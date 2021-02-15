@@ -420,8 +420,8 @@ public class ClassMetaData {
 		}
 		String data=nav;
 		if("entity".equalsIgnoreCase(getModelType())) {
-				data=nav.replace("%"+getName()+"listUrl%", baseUrl+"/"+CodeGen.getPlural(CommonUtils.toLowerFirst(getName())))
-				.replace("%"+getName()+"editUrl%", baseUrl+"/"+CodeGen.getPlural(CommonUtils.toLowerFirst(getName()))+"/");//.replace("%navigation%", navigation);
+				data=nav.replace("%"+getName()+"listUrl%", baseUrl+"/"+CommonUtils.getSingular(CommonUtils.toLowerFirst(getName())))
+				.replace("%"+getName()+"editUrl%", baseUrl+"/"+CommonUtils.getSingular(CommonUtils.toLowerFirst(getName()))+"/");//.replace("%navigation%", navigation);
 //			File file=new File(dirPath);
 //			if(!file.exists() || !file.isDirectory()) {
 //				file.mkdir();
